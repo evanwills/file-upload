@@ -1,0 +1,91 @@
+import { fileTypes } from './mimeTypes';
+import { mimeType } from './FileUpload.d';
+
+export const defaultTypes : mimeType[] = [
+  fileTypes.png,
+  fileTypes.jpg,
+  fileTypes.webp,
+  fileTypes.pdf,
+  fileTypes.docx,
+  fileTypes.doc,
+];
+
+export const humanImplode = (input : string[], last : string = 'or') : string => {
+  return input.join(', ').replace(/, (?=[^,]+$)/i, ` ${last} `);
+}
+
+/**
+ * Get list of allowed file types separated list of file extensions
+ *
+ * @param types Space separated list of file extensions
+ *
+ * @returns List of allowed file types user can upload
+ */
+export const getAllowedTypes = (types: string) : mimeType[] => {
+  const good : string[] = [];
+  const output : mimeType[] = [];
+  const bad : string[] = [];
+
+  const typeList = types.replace(/[\t\n\r\s :;|,]+/g, ' ').trim().split(' ');
+
+  if (typeList.length > 0) {
+    for (let a = 0; a < typeList.length; a += 1) {
+      const ext = typeList[a].toLowerCase().replace(/[^a-z0-9]+/, '').substring(0, 4);
+
+      if (typeof fileTypes[typeList[a]] !== 'undefined') {
+        if (good.indexOf(ext) === -1) {
+          good.push(ext);
+          output.push(fileTypes[typeList[a]])
+        }
+      } else {
+        if (bad.indexOf(typeList[a]) === -1) {
+          bad.push(typeList[a]);
+        }
+      }
+    }
+    if (good.length === 0) {
+      console.error(
+        'Bad file mime types specified in <file-upload> component: "' + bad.join('", "') + '"'
+      );
+      return defaultTypes;
+    } else {
+      return output;
+    }
+  } else {
+    return defaultTypes;
+  }
+};
+
+/**
+ * Convert human readable file size into bytes so it can be compared
+ * to File.size values
+ *
+ * @param humanSize Human readable file size
+ *
+ * @returns file size in Bytes
+ */
+export const humanFileSizeToBytes = (humanSize: string) : number => {
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const bits = humanSize.match(/([0-9.]+)([KMG]?B)?/)
+  const output = (2 * (1024 ^ 2));
+  const errorMsg = 'Invalid file size found. Could not convert "' +
+                   humanSize + '" to Bytes';
+
+  if (bits === null) {
+    console.error(errorMsg);
+    return output;
+  } else {
+    const num = parseFloat(bits[0]);
+    const unit = (typeof bits[1] === 'string' && bits[1] !== '')
+      ? bits[1]
+      : 'B';
+    const i = units.indexOf(unit);
+
+    if (i > -1 && num > 0) {
+      return Math.round(num * (1024 ^ i));
+    } else {
+      console.error(errorMsg);
+      return (2 * (1024 ^ 2));
+    }
+  }
+}
