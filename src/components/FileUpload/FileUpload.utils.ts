@@ -57,6 +57,19 @@ export const getAllowedTypes = (types: string) : mimeType[] => {
 };
 
 /**
+ * Get a unique ID to user as the value for a label's `for`
+ * attribute and an ID for the associated input field.
+ *
+ * @param id     parent ID to append to prepend output ID
+ * @param suffix string to append to parent ID
+ *
+ * @returns a string to use as an input field ID
+ */
+export const getFieldID = (id: string, suffix: string) : string => {
+  return `${id}--${suffix}`;
+};
+
+/**
  * Convert human readable file size into bytes so it can be compared
  * to File.size values
  *
@@ -75,10 +88,11 @@ export const humanFileSizeToBytes = (humanSize: string) : number => {
     console.error(errorMsg);
     return output;
   } else {
-    const num = parseFloat(bits[0]);
-    const unit = (typeof bits[1] === 'string' && bits[1] !== '')
-      ? bits[1]
+    const num = parseFloat(bits[1]);
+    const unit = (typeof bits[2] === 'string' && bits[2] !== '')
+      ? bits[2]
       : 'B';
+
     const i = units.indexOf(unit);
 
     if (i > -1 && num > 0) {
@@ -88,4 +102,4 @@ export const humanFileSizeToBytes = (humanSize: string) : number => {
       return (2 * (1024 ^ 2));
     }
   }
-}
+};

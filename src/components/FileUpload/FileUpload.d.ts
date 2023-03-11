@@ -80,36 +80,6 @@ export type fileData = {
   type: string,
 }
 
-export type mimeType = {
-  /**
-   * File mime type
-   *
-   * @property {string} mime
-   */
-  mime: string,
-  /**
-   * Human readable name for file type
-   *
-   * @property {string} name
-   */
-  name: string,
-  /**
-   * generic type of file (e.g. image, audio, video, document, etc)
-   *
-   * @property {string} type
-   */
-  type: string
-}
-
-/**
- * List of mime types available
- *
- * @var {object}
- */
-export type mimeList = {
-  [index: string]: mimeType
-}
-
 export type fileUploadState = {
   /**
    * List of accepted mime types of files user is allowed to upload
@@ -231,4 +201,45 @@ export type fileUploadState = {
    * @property {string} uploadHelp
    */
   uploadHelp: string,
+}
+
+export type fileUploadImgState = {
+  isBad: boolean,
+  wrapClass: string,
+  alt: string,
+}
+
+/**
+ * List of mime types available
+ *
+ * @var {object}
+ */
+export type mimeList = {
+  [index: string]: mimeType
+}
+
+export type mimeType = {
+  /**
+   * File mime type
+   *
+   * @property {string} mime
+   */
+  mime: string,
+  /**
+   * Human readable name for file type
+   *
+   * @property {string} name
+   */
+  name: string,
+  /**
+   * generic type of file (e.g. image, audio, video, document, etc)
+   *
+   * @property {string} type
+   */
+  type: string
+}
+
+export type replaceData = {
+  oldName: string,
+  newFile: File
 }
