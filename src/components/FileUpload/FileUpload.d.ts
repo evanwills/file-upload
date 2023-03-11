@@ -107,6 +107,13 @@ export type fileUploadState = {
    */
   badCount: number,
   /**
+   * Whether or not the user can confirm their selection of files
+   * and send them to the server
+   *
+   * @property {boolean} canConfirm
+   */
+  canConfirm: boolean,
+  /**
    * Whether or not the user has already selected the maximum number
    * of (valid) files they can
    *

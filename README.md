@@ -5,12 +5,25 @@ provides a fancy user interface for uploading one or more files of
 specified types and (for images) having the images resized in the 
 browser before they're sent to the server.
 
+> __Note:__ `FileUpload` does not handle anything to do with sending 
+>           the files to the server.
+>
+> When the user confirms they are happy with their selection, a 
+> [FileList](https://developer.mozilla.org/en-US/docs/Web/API/FileList)
+> object containing all the valid selected files is created  and made
+> available and a `confirmupload` event is emitted. It is then up to 
+> the parent component to handle sending the files to the server.
+
+---
 
 ## Attributes
 
 ### `id`
 
-(_required_ - no default)
+* _required_
+* _{string}_ 
+* No default
+* Variable name: `id`
 
 Prepended to the IDs of component's buttons and input fields to make 
 it easy to add accessibility features to those buttons and input 
@@ -19,58 +32,84 @@ fields. It gives the user the ability to preview their selection and
 It also allows selected files to be removed and new files added 
 before selection is confirmed.
 
-> __Note:__ `FileUpload` does not handle anything to do with sending 
->           the files to the server.
-
-When the user confirms they are happy with their selection, a 
-FileList object containing all the valid selected files is created 
-and made available and a `confirm-upload` event is emitted. It is 
-then up to the parent component to handle sending the files to the 
-server.
-
 ### `label`
 
-(_required_ - no default)
+* _required_
+* _{string}_ 
+* No default
+* Variable name: `label`
 
 Used as title for the file upload modal block
 
-### `helpTxt`
+### `auto-exclude`
 
-(_optional_ - Default: "" (empty)) 
+* _optional_ 
+* _{boolean}_
+* Default: `FALSE`
+* Variable name: `autoExclude`
+
+Whether or not to auto exclude bad files from the confirmed list of 
+files. By default, the user must conciously remove any bad files 
+before they can upload anything to the server. By setting 
+`auto-exclude` to `TRUE`, the component automatically strips any 
+disallowed files from the list it sends to the server.
+
+### `help-txt`
+
+* _optional_ 
+* _{string}_
+* Default: "" (empty)
+* Variable name: `helpTxt`
 
 Help text to show end user to help them select appropriate files they
 should upload.
 
-### `maxFiles`
+### `max-files`
 
-(_optional_ - Default: `1`) 
+* _optional_ 
+* _{number}_
+* Default: `1`
+* Variable name: `maxFiles`
 
 Maximum number of valid files a user can upload at one time.
 
-### `minFiles`
+### `min-files`
 
-(_optional_ - Default: `1`) 
+* _optional_ 
+* _{number}_
+* Default: `1`
+* Variable name: `minFiles`
 
 Minimum number of valid files a user must upload at one time.
 
-### `maxPixels`
+### `max-pixels`
 
-(_optional_ - Default: `1500`) 
+* _optional_ 
+* _{number}_
+* Default: `1500`
+* Variable name: `maxPixels`
 
 Maximum number of pixels (in either X or Y dimension) an image
 should be after processing
 
-### `maxSingle`
+### `max-single`
 
-(_optional_ - Default: "`5MB`") 
+* _optional_ 
+* _{string}_
+* Default: "`5MB`"
+* Variable name: `maxSingle`
+
 
 Maximum file size a single file can be
 
 > __Note:__ If no unit is specified, Bytes are assumed
 
-### `maxTotal`
+### `max-total`
 
-(_optional_ - Default: "`15MB`") 
+* _optional_ 
+* _{string}_
+* Default: "`15MB`"
+* Variable name: `maxTotal`
 
 Maximum total size a all files user can upload.
 
@@ -78,13 +117,19 @@ Maximum total size a all files user can upload.
 
 ### `reorder`
 
-(_optional_ - Default: _`FALSE`_) 
+* _optional_ 
+* _{boolean}_
+* Default: `FALSE`
+* Variable name: `reorder`
 
 Whether or not user can reorder files displayed in the file/image carousel
 
 ### `types`
 
-(_optional_ - Default: "`png jpg webp pdf docx doc`")
+* _optional_ 
+* _{string}_
+* Default: "`png jpg webp pdf docx doc`"
+* Variable name: `types`
 
 List of file types (file extensions) the server will accept. (list will be split on white space and/or punctuation)
 

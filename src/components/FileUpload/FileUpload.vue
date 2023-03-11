@@ -7,365 +7,524 @@ import  ImageBlobReduce from 'image-blob-reduce';
 import FileUploadImage from './FileUploadImage.vue';
 // import  ImageBlobReduce from '@types/image-blob-reduce';
 
-
-
-
 export default {
-    props: {
-        helpTxt: { type: String, required: false, default: "" },
-        id: { type: String, required: true },
-        label: { type: String, required: true },
-        maxFiles: { type: String, required: false, default: "1" },
-        // Maximum size (in MB)
-        maxPixels: { type: String, required: false, default: "1500" },
-        maxSingle: { type: String, required: false, default: "5MB" },
-        maxTotal: { type: String, required: false, default: "15MB" },
-        minFiles: { type: String, required: false, default: "1" },
-        reorder: { type: Boolean, required: false, default: false },
-        types: { type: String, required: false, default: "png jpg webp pdf docx doc" },
+  props: {
+    autoExclude: { type: Boolean, required: false, default: false },
+    helpTxt: { type: String, required: false, default: '' },
+    id: { type: String, required: true },
+    label: { type: String, required: true },
+    maxFiles: { type: String, required: false, default: '1' },
+    // Maximum size (in MB)
+    maxPixels: { type: String, required: false, default: '1500' },
+    maxSingle: { type: String, required: false, default: '5MB' },
+    maxTotal: { type: String, required: false, default: '15MB' },
+    minFiles: { type: String, required: false, default: '1' },
+    reorder: { type: Boolean, required: false, default: false },
+    types: { type: String, required: false, default: 'png jpg webp pdf docx doc' },
+  },
+
+  data: function (): fileUploadState {
+    return {
+      accepted: '',
+      active: false,
+      allowedTypes: defaultTypes,
+      badCount: 0,
+      canConfirm: false,
+      full: false,
+      genericTypeList: '',
+      goodCount: 0,
+      humanTypeList: '',
+      min: 1,
+      max: 1,
+      maxPx: 1500,
+      nextUID: 0,
+      primaryID: 0,
+      processingCount: 0,
+      uploadList: [],
+      uploadHelp: '',
+      singleMax: 5242880,
+      tooBig: false,
+      totalMax: 15728640,
+    };
+  },
+
+  methods: {
+    /**
+     * Toggle the upload user interface open or closed.
+     *
+     * If closing the upload user interface, all selected files will
+     * be removed from the upload list. Next time the user wants to
+     * upload, they will have to start form scratch.
+     */
+    toggleActive: function (): void {
+      this.active = !this.active;
+
+      if (this.active === false) {
+        this.uploadList = [];
+      }
     },
-    data: function (): fileUploadState {
-        return {
-            accepted: "",
-            active: false,
-            allowedTypes: defaultTypes,
-            badCount: 0,
-            full: false,
-            genericTypeList: "",
-            goodCount: 0,
-            humanTypeList: "",
-            min: 1,
-            max: 1,
-            maxPx: 1500,
-            nextUID: 0,
-            primaryID: 0,
-            processingCount: 0,
-            uploadList: [],
-            uploadHelp: "",
-            singleMax: 5242880,
-            tooBig: false,
-            totalMax: 15728640,
-        };
+
+    /**
+     * Get list of classes to use on an element
+     *
+     * @param cls1 primary class for the element
+     * @param cls2 secondary class used for the element
+     *
+     *
+     */
+    activeClass: function (cls1: string, cls2?: string): string {
+        const output: string[] = ['file-upload__' + cls1];
+        if (typeof cls2 === 'string') {
+            output.push('file-upload__' + cls2);
+        }
+        if (this.active === true) {
+            for (let a = 0; a < output.length; a += 1) {
+                output[a] = output[a] + ' ' + output[a] + '--active';
+            }
+        }
+        return output.join(' ');
     },
-    methods: {
-        toggleActive: function (): void {
-            this.active = !this.active;
-            if (this.active === false) {
-                this.uploadList = [];
-            }
-        },
-        updateTypes: function (): void {
-            const types = getAllowedTypes(this.types);
-        },
-        activeClass: function (cls1: string, cls2?: string): string {
-            const output: string[] = ["file-upload__" + cls1];
-            if (typeof cls2 !== "undefined") {
-                output.push("file-upload__" + cls2);
-            }
-            if (this.active === true) {
-                for (let a = 0; a < output.length; a += 1) {
-                    output[a] = output[a] + " " + output[a] + "--active";
-                }
-            }
-            return output.join(" ");
-        },
-        dialogueClass: function (): string {
-            const mode: string = (this.uploadList.length === 0)
-                ? "none"
-                : "some";
-            const clsName: string = "file-upload__dialogue";
-            let output: string = clsName;
-            if (this.active === true) {
-                output += " " + clsName + "--active";
-            }
-            output += " " + clsName + "--" + mode;
-            return output;
-        },
-        carouselClass: function (): string {
-            const tmp = "file-upload__carousel";
-            return `${tmp} ${tmp}--${this.uploadList.length}`;
-        },
-        getUID: function (): number {
-            const output = this.nextUID;
-            this.nextUID += 1;
-            return output;
-        },
-        /**
-         * Get a unique ID to user as the value for a label's `for`
-         * attribute and an ID for the associated input field.
-         *
-         * @param suffix string to append to parent ID
-         *
-         * @returns a string to use as an input field ID
-         */
-        getID: function (suffix: string): string {
-            return getFieldID(this.id, suffix);
-        },
-        getFiles: function (e: Event): void {
-            const files = (e.target as HTMLInputElement).files;
-            console.log("event:", e);
-            console.log("event.target:", e.target);
-            console.log("files:", files);
-            // const selectedFiles = event.target.files;
-            if (typeof files !== null) {
-                for (let a = 0; a < (files as FileList).length; a += 1) {
-                    this.processNewFile((files as FileList)[a]);
-                }
-            }
-        },
 
-        replaceFile: function (oldFileName : string, newFile : File) : void {
-          let ok = false;
-          for (let a = 0; a < this.uploadList.length; a += 1) {
-            if (this.uploadList[a].name === oldFileName) {
-              ok = true;
-              this.uploadList[a].badType = (this.accepted.indexOf(newFile.type) === 0);
-              this.uploadList[a].file = null;
-              this.uploadList[a].lastModified = newFile.lastModified;
-              this.uploadList[a].name = newFile.name;
-              this.uploadList[a].ready = false;
-              this.uploadList[a].size = newFile.size;
-              this.uploadList[a].originalSize = newFile.size;
-              this.uploadList[a].src = this.getTmpSrc(newFile.type);
-              this.uploadList[a].tooBig = newFile.size > this.singleMax;
-              this.uploadList[a].type = newFile.type;
-            };
+    /**
+     * Get a class name (or names) for styling the main upload
+     * dialogue/modal
+     *
+     * @returns dialogue/modal classes
+     */
+    dialogueClass: function (): string {
+        const mode: string = (this.uploadList.length === 0)
+            ? 'none'
+            : 'some';
+        const clsName: string = 'file-upload__dialogue';
+        let output: string = clsName;
+        if (this.active === true) {
+            output += ' ' + clsName + '--active';
+        }
+        output += ' ' + clsName + '--' + mode;
+        return output;
+    },
 
-            this.processFileInner(this.uploadList[a], newFile);
-            break;
-          }
+    /**
+     * Get a class name (or names) for styling the image carousel
+     *
+     * @returns image carousel classes
+     */
+    carouselClass: function (): string {
+      const tmp = 'file-upload__carousel';
+      return `${tmp} ${tmp}--${this.uploadList.length}`;
+    },
 
-          if (ok === false) {
-            throw new Error('could not find file ("' + oldFileName + '") to replace with "' + newFile.name + '"');
-          }
-        },
+    /**
+     * Remove all selected files from the upload list
+     */
+    clearAll: function (): void {
+      console.group('clearAll')
+      console.groupEnd();
 
-        getImgID: function (fileName : string) : string {
-          const suffix = fileName.replace(/[^a-z0-9_-]/ig, '-')
-          return this.id + '__' + suffix;
-        },
+      this.uploadList = []
+    },
 
-        getTmpSrc: function (type: string): string {
-            return "";
-        },
+    /**
+     * Get a unique ID to user as the value for a label's `for`
+     * attribute and an ID for the associated input field.
+     *
+     * @param suffix string to append to parent ID
+     *
+     * @returns a string to use as an input field ID
+     */
+    getID: function (suffix: string): string {
+      return getFieldID(this.id, suffix);
+    },
 
-        isImage: function (type: string): boolean {
-            for (let a = 0; a < this.allowedTypes.length; a += 1) {
-                if (this.allowedTypes[a].mime === type && this.allowedTypes[a].type === "image") {
-                    return true;
-                }
-            }
-            return false;
-        },
-        addFileToList: function (data: fileData): void {
-            let done = false;
-            for (let a = 0; a < this.uploadList.length; a += 1) {
-                if (this.uploadList[a].name === data.name) {
-                    this.uploadList[a] = data;
-                    done = true;
-                }
-            }
-            if (done === false) {
-                this.uploadList.push(data);
-            }
-        },
-        checkForSurplus: function (): void {
-            let bad = 0;
-            let good = 0;
-            let totalBytes = 0;
-            for (let a = 0; a < this.uploadList.length; a += 1) {
-                if (this.uploadList[a].badType === false && this.uploadList[a].tooBig === false) {
-                    good += 1;
-                    this.uploadList[a].surplus = (good > this.max);
-                    totalBytes += this.uploadList[a].size;
-                }
-                else {
-                    bad += 1;
-                }
-            }
-            this.goodCount = good;
-            this.badCount = bad;
-            this.full = (good > this.max);
-            this.tooBig = (totalBytes > this.totalMax);
-            this.uploadList.sort((a: fileData, b: fileData): number => {
-                if (a.id > b.id) {
-                    return 1;
-                }
-                else if (a.id < b.id) {
-                    return -1;
-                }
-                else {
-                    return 0;
-                }
+    /**
+     * Process all files user has selected using a file input field
+     *
+     * @param e File input change event
+     */
+    processSelectedFiles: function (e: Event): void {
+      const files = (e.target as HTMLInputElement).files;
+      console.log('event:', e);
+      console.log('event.target:', e.target);
+      console.log('files:', files);
+      // const selectedFiles = event.target.files;
+
+      if (typeof files !== null) {
+        for (let a = 0; a < (files as FileList).length; a += 1) {
+          this.processNewFile((files as FileList)[a]);
+        }
+      }
+    },
+
+    /**
+     * Get a unique ID to use for a `<FileUploadImage>` component
+     *
+     * @param fileName name of the file being rendered in the
+     *                 component
+     */
+    getImgID: function (fileName : string) : string {
+      const suffix = fileName.replace(/[^a-z0-9_-]/ig, '-')
+      return this.id + '__' + suffix;
+    },
+
+    /**
+     * Get component specific unique ID for the file.
+     *
+     * (This may change over time if the file reordered)
+     *
+     * @returns {number} next unique id in list of IDs for this
+     *                   component
+     */
+    getUID: function (): number {
+      const output = this.nextUID;
+      this.nextUID += 1;
+
+      return output;
+    },
+
+    /**
+     * Check whether or not a file is an image (based on it's
+     * declared mime type)
+     *
+     * @param type MIME type of a file
+     */
+    isImage: function (type: string): boolean {
+      for (let a = 0; a < this.allowedTypes.length; a += 1) {
+        if (this.allowedTypes[a].mime === type && this.allowedTypes[a].type === 'image') {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    /**
+     * Add a new file to the list or replace an existing file in
+     * the list of files the user has selected for uploading.
+     *
+     * @param data matadata about the file to be uploaded
+     */
+    addFileToList: function (data: fileData): void {
+      let done = false;
+      for (let a = 0; a < this.uploadList.length; a += 1) {
+        if (this.uploadList[a].name === data.name) {
+          this.uploadList[a] = data;
+          done = true;
+        }
+      }
+
+      if (done === false) {
+        this.uploadList.push(data);
+      }
+    },
+
+    /**
+     * Go through the list of selected files and check if there are
+     * any issues posed by the group of files as a whole.
+     */
+    checkForIssues: function (): void {
+      let bad = 0;
+      let good = 0;
+      let totalBytes = 0;
+      for (let a = 0; a < this.uploadList.length; a += 1) {
+        if (this.uploadList[a].badType === false && this.uploadList[a].tooBig === false) {
+          good += 1;
+          this.uploadList[a].surplus = (good > this.max);
+          totalBytes += this.uploadList[a].size;
+        } else {
+          bad += 1;
+        }
+      }
+
+      this.goodCount = good;
+      this.badCount = bad;
+      this.full = (good > this.max);
+      this.tooBig = (totalBytes > this.totalMax);
+
+      this.canConfirm = (
+        (this.goodCount > 0 && this.tooBig === false) &&
+        (
+          (this.badCount === 0 && this.full === false)
+          || this.autoExclude === true
+        )
+      );
+
+      this.uploadList.sort((a: fileData, b: fileData): number => {
+        if (a.id > b.id) {
+          return 1;
+        } else if (a.id < b.id) {
+          return -1;
+        } else {
+          return 0;
+        }
+      });
+      // console.log('this:', this);
+      console.log('this.uploadList:', this.uploadList);
+    },
+
+    /**
+     * Delete selected file from the list of files user has selected
+     * (and remove it from the file carousel).
+     *
+     * @param fileName Name of file to be removed from the list.
+     */
+    deleteFile: function (fileName: string): void {
+      console.group('FileUpload - deleteFile()')
+      console.log('fileName:', fileName);
+
+      console.groupEnd();
+      this.uploadList = this.uploadList.filter((file : fileData) => file.name !== fileName)
+    },
+
+    /**
+     * Change the order of the files in the list so that the
+     * selected file is moved to the left of where it was.
+     *
+     * This will change its position in the file carousel
+     *
+     * @param e Button click event
+     */
+    moveLeftCatch: function (e: Event): void {
+      console.group('FileUpload - moveLeftCatch()')
+      console.log('event:', e);
+      console.groupEnd();
+    },
+
+    /**
+     * Change the order of the files in the list so that the
+     * selected file is moved to the right of where it was.
+     *
+     * This will change its position in the file carousel
+     *
+     * @param e Button click event
+     */
+    moveFileRight: function (e: Event): void {
+      console.group('FileUpload - moveFileRight()')
+      console.log('event:', e);
+      console.groupEnd();
+    },
+
+    /**
+     * Move the focus image in the carousel one step to the right
+     *
+     * @param e Button click event
+     */
+    next: function (e: Event): void {
+      const btn = (e.target as HTMLButtonElement);
+      console.group('next()')
+      console.log('event:', e);
+      console.log('event.target:', e.target);
+      console.log('btn:', btn);
+      console.groupEnd();
+    },
+
+    /**
+     * Move the focus image in the carousel one step to the left
+     *
+     * @param e Button click event
+     */
+    previous: function (e: Event): void {
+      const btn = (e.target as HTMLButtonElement);
+      console.group('previous()')
+      console.log('event:', e);
+      console.log('event.target:', e.target);
+      console.log('btn:', btn);
+      console.groupEnd();
+    },
+
+    /**
+     * Process a single new file the user has selected
+     *
+     * @param file New file to be added to the list of files the
+     *             user has selected
+     */
+    processNewFile: function (file: File): void {
+      const tmp: fileData = {
+        id: this.getUID(),
+        badType: this.accepted.indexOf(file.type) === 0,
+        file: null,
+        lastModified: file.lastModified,
+        name: file.name,
+        ready: false,
+        size: file.size,
+        originalSize: file.size,
+        src: '',
+        surplus: false,
+        tooBig: file.size > this.singleMax,
+        type: file.type
+      };
+
+      this.addFileToList(tmp);
+      this.processFileInner(tmp, file);
+    },
+
+    /**
+     * Process a single file selected by the user
+     *
+     * First check if it's bad, then (if it's good), check if its
+     * an image. If it's an image, make sure it's not too big by
+     * resizing it. Finally, add it to the list of files to show
+     * the user.
+     *
+     * @param data All the needed metadata about a file (possibly
+     *             including an old version of the file itself)
+     * @param file File to be processed then added to the metadata
+     */
+    processFileInner: function (data: fileData, file: File) {
+      if (data.badType === false) {
+        if (this.isImage(data.type)) {
+          const imgReduce = new ImageBlobReduce();
+
+          imgReduce.toBlob(file, { max: 1500 })
+            .then((blob: Blob) => {
+            // Convert image blob to file object
+            const newFile = new File(
+            // Blob must be wrapped within array for file object
+            // constructor
+            [blob], file.name, {
+                type: blob.type,
+                lastModified: Date.now(),
             });
-            // console.log('this:', this);
-            console.log("this.uploadList:", this.uploadList);
-        },
-        processNewFile: function (file: File): void {
-            const tmp: fileData = {
-                id: this.getUID(),
-                badType: this.accepted.indexOf(file.type) === 0,
-                file: null,
-                lastModified: file.lastModified,
-                name: file.name,
-                ready: false,
-                size: file.size,
-                originalSize: file.size,
-                src: this.getTmpSrc(file.type),
-                surplus: false,
-                tooBig: file.size > this.singleMax,
-                type: file.type
-            };
 
-            this.addFileToList(tmp);
-            this.processFileInner(tmp, file);
-        },
+            data.file = newFile;
+            data.src = URL.createObjectURL(newFile);
+            data.ready = true;
+            data.size = newFile.size;
+            data.tooBig = newFile.size > this.singleMax;
 
-        processFileInner: function (data: fileData, file: File) {
-          if (data.badType === false) {
-                if (this.isImage(data.type)) {
-                    const reduce = new ImageBlobReduce();
-                    reduce.toBlob(file, { max: 1500 })
-                        .then((blob: Blob) => {
-                        // Convert image blob to file object
-                        const newFile = new File(
-                        // Blob must be wrapped within array for file object
-                        // constructor
-                        [blob], file.name, {
-                            type: blob.type,
-                            lastModified: Date.now(),
-                        });
-                        data.file = newFile;
-                        data.src = URL.createObjectURL(newFile);
-                        data.ready = true;
-                        data.size = newFile.size;
-                        data.tooBig = newFile.size > this.singleMax;
-                        this.addFileToList(data);
-                        this.checkForSurplus();
-                    });
-                }
-                else {
-                    data.file = file;
-                    data.ready = true;
-                    this.addFileToList(data);
-                    this.checkForSurplus();
-                }
-            }
-        },
-        deleteCatch: function (fileName: string): void {
-          console.group('FileUpload - deleteCatch()')
-          console.log('fileName:', fileName);
-
-          console.groupEnd();
-          this.uploadList = this.uploadList.filter((file : fileData) => file.name !== fileName)
-        },
-        replaceCatch: function (e: replaceData): void {
-          console.group('FileUpload - replaceCatch()')
-          console.log('event:', e);
-          console.groupEnd();
-          this.replaceFile(e.oldName, e.newFile);
-        },
-        moveLeftCatch: function (e: Event): void {
-          console.group('FileUpload - moveLeftCatch()')
-          console.log('event:', e);
-          console.groupEnd();
-        },
-        moveRightCatch: function (e: Event): void {
-          console.group('FileUpload - moveRightCatch()')
-          console.log('event:', e);
-          console.groupEnd();
-        },
-        next: function (e: Event): void {
-          const btn = (e.target as HTMLButtonElement);
-          console.group('next()')
-          console.log('event:', e);
-          console.log('event.target:', e.target);
-          console.log('btn:', btn);
-          console.groupEnd();
-        },
-        previous: function (e: Event): void {
-          const btn = (e.target as HTMLButtonElement);
-          console.group('previous()')
-          console.log('event:', e);
-          console.log('event.target:', e.target);
-          console.log('btn:', btn);
-          console.groupEnd();
-        },
-        clearAll: function (e: Event): void {
-          const btn = (e.target as HTMLButtonElement);
-          console.group('moveLeft')
-          console.log('event:', e);
-          console.log('event.target:', e.target);
-          console.log('btn:', btn);
-          console.groupEnd();
-        },
+            this.addFileToList(data);
+            this.checkForIssues();
+            this.$forceUpdate();
+          });
+        } else {
+          data.file = file;
+          data.ready = true;
+          this.addFileToList(data);
+          this.checkForIssues();
+        }
+      }
     },
-    mounted: function (): void {
-        this.allowedTypes = getAllowedTypes(this.types);
-        const genericTypes: string[] = [];
-        const typeList: string[] = [];
-        let helpMsg: string = "";
-        let s: string = ".";
-        let sep = "";
-        this.accepted = "";
-        for (let a = 0; a < this.allowedTypes.length; a += 1) {
-            if (genericTypes.indexOf(this.allowedTypes[a].type) === -1) {
-                genericTypes.push(this.allowedTypes[a].type);
-            }
-            typeList.push(this.allowedTypes[a].name);
-            this.accepted += sep + this.allowedTypes[a].mime;
-            sep = ", ";
-        }
-        this.maxPx = parseInt(this.maxPixels);
-        this.singleMax = humanFileSizeToBytes(this.maxSingle);
-        this.totalMax = humanFileSizeToBytes(this.maxTotal);
-        this.humanTypeList = humanImplode(typeList);
-        this.genericTypeList = humanImplode(genericTypes);
-        console.log("human file types:", this.humanTypeList);
-        console.log("generic file types:", this.genericTypeList);
-        // --------------------------------------------------------------
-        // START: Prepare file input label text
-        this.min = parseInt(this.minFiles);
-        this.max = parseInt(this.maxFiles);
-        if (this.max < 1) {
-            this.max = 1;
-            console.error("invalid maxFiles set");
-        }
-        if (this.min < 1) {
-            this.min = 1;
-            console.error("invalid minFiles set");
-        }
-        else if (this.min > this.max) {
-            console.error("invalid minFiles set (minFiles cannot be greater than maxFiles)");
-            this.min = this.max;
-        }
-        if (this.max > 100) {
-            console.warn("unwise value for maxFiles set");
-        }
-        helpMsg = "Choose ";
-        if (this.max > 1) {
-            helpMsg += (this.min > 1)
-                ? `at least ${this.min} and no more than ${this.max}`
-                : `up to ${this.max}`;
-            s = "s.";
-        }
-        else {
-            helpMsg += "one";
-        }
-        // helpMsg += ` ${this.humanTypeList}`;
-        helpMsg += ` file${s}`;
-        this.uploadHelp = helpMsg;
-        // END: Prepare file input label text
-        // --------------------------------------------------------------
-        console.log("this:", this);
-        console.log("this.id:", this.id);
+
+    /**
+     * Find an old file in the list of selected files and replace it
+     * with the new one the user has selected.
+     *
+     * @param oldName Name of the file the new file will replace
+     * @param newFile New file to replace old one.
+     */
+    replaceFile: function ({ oldName, newFile } : replaceData): void {
+      console.group('FileUpload - replaceFile()')
+      console.log('oldName:', oldName);
+      console.log('newFile:', newFile);
+      console.log('this.uploadList.length:', this.uploadList.length);
+
+      let ok = false;
+
+      for (let a = 0; a < this.uploadList.length; a += 1) {
+        console.log('oldName:', oldName);
+        console.log('this.uploadList[' + a + ']:', this.uploadList[a])
+        console.log('this.uploadList[' + a + '].name:', this.uploadList[a].name)
+
+        if (this.uploadList[a].name === oldName) {
+          ok = true;
+
+          this.uploadList[a].badType = (this.accepted.indexOf(newFile.type) === 0);
+          this.uploadList[a].file = null;
+          this.uploadList[a].lastModified = newFile.lastModified;
+          this.uploadList[a].name = newFile.name;
+          this.uploadList[a].ready = false;
+          this.uploadList[a].size = newFile.size;
+          this.uploadList[a].originalSize = newFile.size;
+          this.uploadList[a].src = '';
+          this.uploadList[a].tooBig = newFile.size > this.singleMax;
+          this.uploadList[a].type = newFile.type;
+
+          this.processFileInner(this.uploadList[a], newFile);
+          break;
+        };
+
+      }
+
+      if (ok === false) {
+        throw new Error('could not find file ("' + oldName + '") to replace with "' + newFile.name + '"');
+      }
+
+      console.groupEnd();
     },
-    components: { FileUploadImage }
+  },
+
+  mounted: function (): void {
+    this.allowedTypes = getAllowedTypes(this.types);
+    const genericTypes: string[] = [];
+    const typeList: string[] = [];
+    let helpMsg: string = '';
+    let s: string = '.';
+    let sep = '';
+    this.accepted = '';
+
+    for (let a = 0; a < this.allowedTypes.length; a += 1) {
+      if (genericTypes.indexOf(this.allowedTypes[a].type) === -1) {
+        genericTypes.push(this.allowedTypes[a].type);
+      }
+
+      typeList.push(this.allowedTypes[a].name);
+      this.accepted += sep + this.allowedTypes[a].mime;
+      sep = ', ';
+    }
+
+    this.maxPx = parseInt(this.maxPixels);
+    this.singleMax = humanFileSizeToBytes(this.maxSingle);
+    this.totalMax = humanFileSizeToBytes(this.maxTotal);
+    this.humanTypeList = humanImplode(typeList);
+    this.genericTypeList = humanImplode(genericTypes);
+    console.log('human file types:', this.humanTypeList);
+    console.log('generic file types:', this.genericTypeList);
+
+    // --------------------------------------------------------------
+    // START: Prepare file input label text
+    this.min = parseInt(this.minFiles);
+    this.max = parseInt(this.maxFiles);
+
+    if (this.max < 1) {
+      this.max = 1;
+      console.error('invalid maxFiles set');
+    }
+
+    if (this.min < 1) {
+      this.min = 1;
+      console.error('invalid minFiles set');
+    } else if (this.min > this.max) {
+      console.error('invalid minFiles set (minFiles cannot be greater than maxFiles)');
+      this.min = this.max;
+    }
+
+    if (this.max > 100) {
+      console.warn('unwise value for maxFiles set');
+    }
+
+    helpMsg = 'Choose ';
+
+    if (this.max > 1) {
+      helpMsg += (this.min > 1)
+        ? `at least ${this.min} and no more than ${this.max}`
+        : `up to ${this.max}`;
+      s = 's.';
+    } else {
+      helpMsg += 'one';
+    }
+
+    // helpMsg += ` ${this.humanTypeList}`;
+    helpMsg += ` file${s}`;
+    this.uploadHelp = helpMsg;
+    // END: Prepare file input label text
+    // --------------------------------------------------------------
+    console.log('this:', this);
+    console.log('this.id:', this.id);
+  },
+  components: { FileUploadImage }
 }
 </script>
 
 <template>
-  <div class="file-upload">
+  <div class='file-upload'>
     <button v-on:click="toggleActive" :tabindex="active ? -1 : undefined">
       Upload <span class="visually-hidden">{{ genericTypeList }} files</span>
     </button>
@@ -393,10 +552,10 @@ export default {
                              :is-bad="file.badType"
                              :too-big="file.tooBig"
                              :surplus="file.surplus"
-                             @delete="deleteCatch"
-                             @replace="replaceCatch"
+                             @delete="deleteFile"
+                             @replace="replaceFile"
                              @moveleft="moveLeftCatch"
-                             @moveright="moveRightCatch"></FileUploadImage>
+                             @moveright="moveFileRight"></FileUploadImage>
             <!-- <img :src="file.src" :alt="file.name" /> -->
           </li>
         </ul>
@@ -404,11 +563,11 @@ export default {
       <footer>
         <p v-if="uploadList.length === 0">
           <label :for="getID('main-input')" class="file-upload__label">{{ uploadHelp }}</label>
-          <input type="file" class="file-upload__input visually-hidden" :id="getID('main-input')" :multiple="(max > 1) ? true : false" :accept="accepted" v-on:change="getFiles" />
+          <input type="file" class="file-upload__input visually-hidden" :id="getID('main-input')" :multiple="(max > 1) ? true : false" :accept="accepted" v-on:change="processSelectedFiles" />
         </p>
         <p v-else-if="goodCount > 0 && uploadList.length <= max && badCount === 0" class="file-upload__add-confirm">
           <label v-if="full === false" :for="getID('extra-input')" class="file-upload__add-confirm__btn">Add another file</label>
-          <input type="file" class="file-upload__input visually-hidden" :id="getID('extra-input')" :multiple="(max > 1) ? true : false" :accept="accepted" v-on:change="getFiles" />
+          <input type="file" class="file-upload__input visually-hidden" :id="getID('extra-input')" :multiple="(max > 1) ? true : false" :accept="accepted" v-on:change="processSelectedFiles" />
           <button v-on:click="$emit('confirm-upload')" class="file-upload__add-confirm__btn">Confirm and upload</button>
         </p>
         <p v-else-if="goodCount > 0 && (uploadList.length > max || badCount > 0)">
