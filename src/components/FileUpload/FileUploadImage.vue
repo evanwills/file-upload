@@ -4,18 +4,100 @@ import { fileUploadImgState } from './FileUpload';
 
 export default {
   props: {
+    /**
+     * List of space separated MIME types for files user can upload
+     *
+     * @property {string} accepted
+     */
     accepted: { type: String, required: true },
+    /**
+     * Whether or not user can move this file relative to its
+     * siblings
+     *
+     * @property {boolean} canMove
+     */
     canMove: { type: Boolean, required: false, default: false },
-    // fileData: { required: true },
+    /**
+     * Letters in file extension for this file.
+     *
+     * Used to indicate the file type for non image files or
+     * processing state for images.
+     *
+     * @property {string} ext
+     */
+    ext: { type: String, required: true },
+    /**
+     * ID for this component
+     *
+     * @property {string} id
+     */
     id: { type: String, required: true },
+    /**
+     * Whether or not this file/image has an unacceptable file type
+     *
+     * @property {boolean} badType
+     */
+    isBadType: { type: Boolean, required: false, default: false },
+    /**
+     * Whether or not this component is the focused file/image in
+     * the file carousel
+     *
+     * @property {boolean} isFocused
+     */
+    isFocused: { type: Boolean, required: true },
+    /**
+     * Whether or not this file's size exceedes the maximum allowed
+     *
+     * @property
+     */
+    isTooBig: { type: Boolean, required: true },
+    /**
+     * Position of this file/image within the list of files/images
+     * user has selected for upload
+     *
+     * @property {number} pos
+     */
     pos: { type: Number, required: true },
+    /**
+     * Total number of files/images in the list of files/images the
+     * user has selected for upload
+     */
     total: { type: Number, required: true },
+    /**
+     * File size (in Bytes) for this file/image
+     *
+     * @property {number} fileSize
+     */
     fileSize: { type: Number, required: true },
+    /**
+     * Data source URL for the image
+     * (empty string if image is not processed or file is not an image)
+     *
+     * @property {string} fileSrc
+     */
     fileSrc: { type: String, required: true },
+    /**
+     * Human readable file type for image
+     *
+     * @property {string} fileType
+     */
     fileType: { type: String, required: true },
+    /**
+     * File name of image/file
+     *
+     * @property {string} fileName
+     */
     fileName: { type: String, required: true },
-    tooBig: { type: Boolean, required: true },
-    surplus: { type: Boolean, required: true },
+    /**
+     * Whether or not this file is surplus
+     *
+     * (i.e. the maximum number of good files has already been
+     * reached. This file may be good but there are already enough
+     * so it can't be included in the upload)
+     *
+     * @property {boolean} isSurplus
+     */
+    isSurplus: { type: Boolean, required: true },
   },
 
   data: function () : fileUploadImgState {
@@ -93,7 +175,7 @@ export default {
       this.isBad = true;
 
       this.wrapClass = 'file-upload-img__bad'
-    // } else if (this.surplus === true) {
+    // } else if (this.isSurplus === true) {
       this.wrapClass = 'file-upload-img__surplus'
     // }
   },
@@ -103,15 +185,20 @@ export default {
 
 <template>
   <figure :class="wrapClass">
-    <img :src="fileSrc" :alt="alt" />
+    <img v-if="fileSrc !== ''" :src="fileSrc" :alt="alt" />
+    <span v-else class="file-upload-img__placeholder"></span>
     <button v-if="total > 1" v-on:click="deleteClick">Delete</button>
-    <label v-if="surplus === false">
+    <label v-if="isSurplus === false" class="file-upload-img__replace">
       Replace
-      <input type="file" class="file-upload__input visually-hidden" :id="getID('extra-input')" :accept="accepted" v-on:change="replaceClick" />
+      <input type="file" class="visually-hidden" :id="getID('extra-input')" :accept="accepted" v-on:change="replaceClick" />
     </label>
     <button v-if="isBad === false && canMove === true && pos > 0"
       v-on:click="moveLeftClick">Move left</button>
     <button v-if="isBad === false && canMove === true && pos < total" v-on:click="moveRightClick">Move right</button>
+    <figcaption>
+      <span class="visually-hidden"></span>
+      <p v-if="isTooBig === true"></p>
+    </figcaption>
   </figure>
 </template>
 

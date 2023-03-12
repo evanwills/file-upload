@@ -1,25 +1,97 @@
 <script lang="ts">
 import { fileData, fileUploadState, replaceData } from './FileUpload.d';
-import { defaultTypes, humanImplode, getAllowedTypes, humanFileSizeToBytes, getFieldID } from './FileUpload.utils';
-// import { ImageBlobReduce } from '../../../node_modules/image-blob-reduce/dist/ima';
-// import { ImageBlobReduce } from '../../../node_modules/image-blob-reduce/dist/image-blob-reduce.esm.mjs';
+import { defaultTypes, getAllowedTypes, getFieldID, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
 import  ImageBlobReduce from 'image-blob-reduce';
 import FileUploadImage from './FileUploadImage.vue';
 // import  ImageBlobReduce from '@types/image-blob-reduce';
 
 export default {
   props: {
+    /**
+     * Whether or not to automatically exclude any files that cannot
+     * be included in file upload.
+     *
+     * By default user must deliberately remove any files that
+     * cannot be uploaded.
+     *
+     * @property {boolean} autoExclude
+     */
     autoExclude: { type: Boolean, required: false, default: false },
+    /**
+     * Text to show user to help them choose appropritate files to
+     * upload
+     *
+     * @property {string} helpTxt
+     */
     helpTxt: { type: String, required: false, default: '' },
+    /**
+     * ID of this component. Used to add unique IDs to all fields
+     * and buttons within the component
+     *
+     * > __Note:__ This ID will be prepended to button, input field
+     * >           IDs to make sure those elements can be reused
+     * >           else where in the code without duplication.
+     *
+     * @property {string} id
+     */
     id: { type: String, required: true },
+    /**
+     * Label to (briefly) describe the purpose of the upload
+     *
+     * @property {string} label
+     */
     label: { type: String, required: true },
+    /**
+     * Maximum number of files the user can upload at one time
+     *
+     * @property {number} maxFiles
+     */
     maxFiles: { type: String, required: false, default: '1' },
-    // Maximum size (in MB)
+    /**
+     * Maximum number of pixels an image can be in any dimension
+     *
+     * @property {number} maxPixels
+     */
     maxPixels: { type: String, required: false, default: '1500' },
+    /**
+     * Maximum size a single file can be
+     *
+     * > __Note:__ If no unit is specified, Bytes are assumed
+     *
+     * @property {string} maxSingle
+     */
     maxSingle: { type: String, required: false, default: '5MB' },
+    /**
+     * Maximum total upload size for all files combined
+     *
+     * > __Note:__ If no unit is specified, Bytes are assumed
+     *
+     * @property {string} maxTotal
+     */
     maxTotal: { type: String, required: false, default: '15MB' },
+    /**
+     * Minimum number of files the user must upload
+     *
+     * @property {number} minFiles
+     */
     minFiles: { type: String, required: false, default: '1' },
+    /**
+     * Whether or not the user can reorder files/images within the
+     * list
+     *
+     * By default the selected order is the order the files get
+     * sent to the server. If reorder is true, then the user can
+     * change the order before the files are uploaded.
+     *
+     * @property {boolean} reorder
+     */
     reorder: { type: Boolean, required: false, default: false },
+    /**
+     * List of file extensions matching file types the server will
+     * accept
+     *
+     * @property {string}
+     */
     types: { type: String, required: false, default: 'png jpg webp pdf docx doc' },
   },
 
@@ -38,7 +110,7 @@ export default {
       max: 1,
       maxPx: 1500,
       nextUID: 0,
-      primaryID: 0,
+      focusIndex: 0,
       processingCount: 0,
       uploadList: [],
       uploadHelp: '',
@@ -73,16 +145,19 @@ export default {
      *
      */
     activeClass: function (cls1: string, cls2?: string): string {
-        const output: string[] = ['file-upload__' + cls1];
-        if (typeof cls2 === 'string') {
-            output.push('file-upload__' + cls2);
+      const output: string[] = ['file-upload__' + cls1];
+
+      if (typeof cls2 === 'string') {
+        output.push('file-upload__' + cls2);
+      }
+
+      if (this.active === true) {
+        for (let a = 0; a < output.length; a += 1) {
+          output[a] = output[a] + ' ' + output[a] + '--active';
         }
-        if (this.active === true) {
-            for (let a = 0; a < output.length; a += 1) {
-                output[a] = output[a] + ' ' + output[a] + '--active';
-            }
-        }
-        return output.join(' ');
+      }
+
+      return output.join(' ');
     },
 
     /**
@@ -92,16 +167,19 @@ export default {
      * @returns dialogue/modal classes
      */
     dialogueClass: function (): string {
-        const mode: string = (this.uploadList.length === 0)
-            ? 'none'
-            : 'some';
-        const clsName: string = 'file-upload__dialogue';
-        let output: string = clsName;
-        if (this.active === true) {
-            output += ' ' + clsName + '--active';
-        }
-        output += ' ' + clsName + '--' + mode;
-        return output;
+      const mode: string = (this.uploadList.length === 0)
+        ? 'none'
+        : 'some';
+      const clsName: string = 'file-upload__dialogue';
+      let output: string = clsName;
+
+      if (this.active === true) {
+        output += ' ' + clsName + '--active';
+      }
+
+      output += ' ' + clsName + '--' + mode;
+
+      return output;
     },
 
     /**
@@ -189,7 +267,9 @@ export default {
      */
     isImage: function (type: string): boolean {
       for (let a = 0; a < this.allowedTypes.length; a += 1) {
-        if (this.allowedTypes[a].mime === type && this.allowedTypes[a].type === 'image') {
+        if (this.allowedTypes[a].mime === type &&
+            this.allowedTypes[a].type === 'image'
+        ) {
           return true;
         }
       }
@@ -225,7 +305,9 @@ export default {
       let good = 0;
       let totalBytes = 0;
       for (let a = 0; a < this.uploadList.length; a += 1) {
-        if (this.uploadList[a].badType === false && this.uploadList[a].tooBig === false) {
+        if (this.uploadList[a].badType === false &&
+            this.uploadList[a].tooBig === false
+        ) {
           good += 1;
           this.uploadList[a].surplus = (good > this.max);
           totalBytes += this.uploadList[a].size;
@@ -280,11 +362,15 @@ export default {
      *
      * This will change its position in the file carousel
      *
-     * @param e Button click event
+     * @param fileName name of file passed from FileUploadImage
      */
-    moveLeftCatch: function (e: Event): void {
-      console.group('FileUpload - moveLeftCatch()')
-      console.log('event:', e);
+    moveFileLeft: function (fileName: string): void {
+      console.group('FileUpload - moveFileLeft()')
+      console.log('fileName:', fileName);
+      console.log('this.uploadList (before):', this.uploadList);
+
+      this.uploadList = moveFile(this.uploadList, fileName, -1);
+      console.log('this.uploadList (after):', this.uploadList);
       console.groupEnd();
     },
 
@@ -294,39 +380,49 @@ export default {
      *
      * This will change its position in the file carousel
      *
-     * @param e Button click event
+     * @param fileName name of file passed from FileUploadImage
      */
-    moveFileRight: function (e: Event): void {
+    moveFileRight: function (fileName: string): void {
       console.group('FileUpload - moveFileRight()')
-      console.log('event:', e);
+      console.log('fileName:', fileName);
+      console.log('this.uploadList (before):', this.uploadList);
+
+      this.uploadList = moveFile(this.uploadList, fileName, 1);
+
+      console.log('this.uploadList (after):', this.uploadList);
       console.groupEnd();
     },
 
     /**
      * Move the focus image in the carousel one step to the right
-     *
-     * @param e Button click event
      */
-    next: function (e: Event): void {
-      const btn = (e.target as HTMLButtonElement);
+    next: function (): void {
       console.group('next()')
-      console.log('event:', e);
-      console.log('event.target:', e.target);
-      console.log('btn:', btn);
+      console.log('this.focusIndex (before):', this.focusIndex);
+      if (this.focusIndex < (this.uploadList.length - 1)) {
+        this.focusIndex += 1;
+      } else {
+        // Wrap focus around to beginning
+        this.focusIndex = 0;
+      }
+      console.log('this.focusIndex (after):', this.focusIndex);
       console.groupEnd();
     },
 
     /**
      * Move the focus image in the carousel one step to the left
-     *
-     * @param e Button click event
      */
-    previous: function (e: Event): void {
-      const btn = (e.target as HTMLButtonElement);
+    previous: function (): void {
       console.group('previous()')
-      console.log('event:', e);
-      console.log('event.target:', e.target);
-      console.log('btn:', btn);
+      console.log('this.focusIndex (before):', this.focusIndex);
+      if (this.focusIndex > 0) {
+        this.focusIndex -= 1;
+      } else {
+        // Wrap focus around to end
+        this.focusIndex = (this.uploadList.length - 1);
+      }
+
+      console.log('this.focusIndex (after):', this.focusIndex);
       console.groupEnd();
     },
 
@@ -549,12 +645,14 @@ export default {
                              :file-name="file.name"
                              :file-size="file.size"
                              :file-type="file.type"
-                             :is-bad="file.badType"
-                             :too-big="file.tooBig"
-                             :surplus="file.surplus"
+                             :ext="file.type"
+                             :is-bad-type="file.badType"
+                             :is-focused="focusIndex === index"
+                             :is-too-big="file.tooBig"
+                             :is-surplus="file.surplus"
                              @delete="deleteFile"
                              @replace="replaceFile"
-                             @moveleft="moveLeftCatch"
+                             @moveleft="moveFileLeft"
                              @moveright="moveFileRight"></FileUploadImage>
             <!-- <img :src="file.src" :alt="file.name" /> -->
           </li>

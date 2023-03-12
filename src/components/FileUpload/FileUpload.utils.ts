@@ -1,5 +1,5 @@
 import { fileTypes } from './mimeTypes';
-import { mimeType } from './FileUpload.d';
+import { fileData, mimeType } from './FileUpload.d';
 
 export const defaultTypes : mimeType[] = [
   fileTypes.png,
@@ -9,10 +9,6 @@ export const defaultTypes : mimeType[] = [
   fileTypes.docx,
   fileTypes.doc,
 ];
-
-export const humanImplode = (input : string[], last : string = 'or') : string => {
-  return input.join(', ').replace(/, (?=[^,]+$)/i, ` ${last} `);
-}
 
 /**
  * Get list of allowed file types separated list of file extensions
@@ -103,3 +99,34 @@ export const humanFileSizeToBytes = (humanSize: string) : number => {
     }
   }
 };
+
+export const humanImplode = (input : string[], last : string = 'or') : string => {
+  return input.join(', ').replace(/, (?=[^,]+$)/i, ` ${last} `);
+}
+
+/**
+ * Move a file up or down the list of user selected files
+ *
+ * @param uploadFiles List of user selected files
+ * @param fileName    Name of the file to be matched
+ * @param next        Amount to increment the current index by
+ *
+ * @returns Index of the file matched by name
+ */
+export const moveFile = (uploadFiles : fileData[], fileName : string, next: number) : fileData[] => {
+  for (let a = 0; a < uploadFiles.length; a += 1) {
+    if (uploadFiles[a].name === fileName) {
+      const from = a;
+      const to = a + next;
+      const item = uploadFiles[from];
+      uploadFiles.splice(from, 1);
+      uploadFiles.splice(to, 0, item);
+
+      return uploadFiles;
+    }
+  }
+
+  throw new Error(
+    'could not file in uploadFiles matching name "' + fileName + '"'
+  );
+}

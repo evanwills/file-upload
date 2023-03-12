@@ -169,7 +169,7 @@ export type fileUploadState = {
    *
    * @property {number} primnaryID
    */
-  primaryID: number,
+  focusIndex: number,
   /**
    * How many images are currently being processed
    *
