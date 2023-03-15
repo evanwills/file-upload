@@ -119,38 +119,38 @@ export default {
   methods: {
     deleteClick: function (e: Event) : void {
       const btn = (e.target as HTMLButtonElement);
-      console.group('Image - delete()')
-      console.log('event:', e);
-      console.log('event.target:', e.target);
-      console.log('btn:', btn);
-      console.groupEnd();
+      // console.group('Image - delete()')
+      // console.log('event:', e);
+      // console.log('event.target:', e.target);
+      // console.log('btn:', btn);
+      // console.groupEnd();
       this.$emit('delete', this.fileName);
     },
     moveLeftClick: function (e: Event) : void {
       const btn = (e.target as HTMLButtonElement);
-      console.group('Image - moveLeft()')
-      console.log('event:', e);
-      console.log('event.target:', e.target);
-      console.log('btn:', btn);
-      console.groupEnd();
+      // console.group('Image - moveLeft()')
+      // console.log('event:', e);
+      // console.log('event.target:', e.target);
+      // console.log('btn:', btn);
+      // console.groupEnd();
       this.$emit('moveleft', this.fileName);
     },
     moveRightClick: function (e: Event) : void {
       const btn = (e.target as HTMLButtonElement);
-      console.group('Image - moveRight()')
-      console.log('event:', e);
-      console.log('event.target:', e.target);
-      console.log('btn:', btn);
-      console.groupEnd();
+      // console.group('Image - moveRight()')
+      // console.log('event:', e);
+      // console.log('event.target:', e.target);
+      // console.log('btn:', btn);
+      // console.groupEnd();
       this.$emit('moveright', this.fileName);
     },
     replaceClick: function (e: Event) : void {
       const btn = (e.target as HTMLButtonElement);
-      console.group('Image - replace()')
-      console.log('event:', e);
-      console.log('event.target:', e.target);
-      console.log('btn:', btn);
-      console.groupEnd();
+      // console.group('Image - replace()')
+      // console.log('event:', e);
+      // console.log('event.target:', e.target);
+      // console.log('btn:', btn);
+      // console.groupEnd();
       const files = (e.target as HTMLInputElement).files;
 
       if (typeof files !== null) {
@@ -194,12 +194,12 @@ export default {
 
   mounted: function () : void {
     const tmp = 'file-upload-img';
-    console.group('FileUploadImage.mounted()')
-    console.log('this.ext:', this.ext)
-    console.log('this.fileType:', this.fileType)
-    console.log('this.isTooBig:', this.isTooBig)
-    console.log('this.isBadType:', this.isBadType)
-    console.log('this.isSurplus:', this.isSurplus)
+    // console.group('FileUploadImage.mounted()')
+    // console.log('this.ext:', this.ext)
+    // console.log('this.fileType:', this.fileType)
+    // console.log('this.isTooBig:', this.isTooBig)
+    // console.log('this.isBadType:', this.isBadType)
+    // console.log('this.isSurplus:', this.isSurplus)
     if (this.isTooBig === true || this.isBadType === true) {
       this.isBad = true;
 
@@ -214,9 +214,9 @@ export default {
       ? `Processing ${this.ext} image`
       : this.ext;
     this._fileName = this.fileName.replace(/([^a-z0-9]+)/ig, '$1&ZeroWidthSpace;')
-    console.log('this.isBad:', this.isBad)
-    console.log('this.wrapClass:', this.wrapClass)
-    console.groupEnd();
+    // console.log('this.isBad:', this.isBad)
+    // console.log('this.wrapClass:', this.wrapClass)
+    // console.groupEnd();
   },
 }
 
@@ -224,17 +224,18 @@ export default {
 
 <template>
   <figure :class="wrapClass">
+    <figcaption>
+      <span  class="file-upload-img__pos">{{ (pos + 1) }}</span>
+      <span class="visually-hidden">{{ fileName }}</span>
+      <p v-if="isTooBig === true" class="file-upload-img__bad">This file is too large to be uploaded. Please replace it with a smaller version or delete it from the upload list</p>
+      <p v-if="isBadType === true" class="file-upload-img__bad-msg">You cannot upload a <code>.{{ ext }}</code> type file. Please delete or replace it.</p>
+      <p v-if="isSurplus === true" class="file-upload-img__bad-msg">There are already too many files in the list. Either move this file up the list or delete it.</p>
+    </figcaption>
     <img v-if="fileSrc !== ''" :src="fileSrc" :alt="alt" />
     <div v-else :class="getPlaceholderClass()">
       <span>{{ ext }}</span>
       <span v-html="_fileName"></span>
     </div>
-    <figcaption>
-      <span class="visually-hidden"></span>
-      <p v-if="isTooBig === true" class="file-upload-img__bad">This file is too large to be uploaded. Please replace it with a smaller version or delete it from the upload list</p>
-      <p v-if="isBadType === true" class="file-upload-img__bad-msg">You cannot upload a <code>.{{ ext }}</code> type file. Please delete or replace it.</p>
-      <p v-if="isSurplus === true" class="file-upload-img__bad-msg">There are already too many files in the list. Either move this file up the list or delete it.</p>
-    </figcaption>
     <span v-if="isReady || isBad" :class="getBtnBlockClass()">
       <button v-if="canMove === true && isBad === false && pos > 0"
         v-on:click="moveLeftClick" class="file-upload-img__left" :tabindex="(isFocused === false) ? -1 : undefined">Move left</button>
@@ -279,7 +280,7 @@ export default {
   justify-content: center;
   /* left: 50%; */
   opacity: 0;
-  padding-top: 0.5rem;
+  padding: 0.5rem 0;
   row-gap: 0.5rem;
   transition: opacity ease-in-out 0.3s;
   /* transform: translateX(-50%); */
@@ -311,7 +312,8 @@ export default {
   order: -1;
 }
 .file-upload-img__replace:focus-within {
-  outline: 0.1rem solid #005
+  outline: 0.2rem solid #00b;
+  /* outline-offset: 0.1rem; */
 }
 .file-upload-img__left {
   order: -2;
@@ -331,9 +333,9 @@ export default {
   width: 80%;
   white-space: normal;
 }
-.file-upload-img__placeholder > span:first-child {
+.file-upload-img__placeholder > span:first-child  {
   display: block;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   padding: 5rem 0.5rem 2rem;
   margin: 0 auto;
@@ -341,21 +343,36 @@ export default {
 .file-upload-img__bad-msg {
   background-color: #c00;
   color: #fff;
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   border-radius: 1rem;
-  margin: 1rem 2rem;
+  margin: 0 2rem 0.5rem;
   white-space: normal;
+  max-width: 20rem;
+}
+.file-upload-img__pos {
+  position: absolute;
+  text-align: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  background-color: #009;
+  border-radius: 50%;
+  color: #fff;
+  top: 0rem;
+  left: 0rem;
+  font-size: 0.8rem;
+  line-height: 1.4rem;
+  border: 0.15rem solid #fff;
 }
 
 @media screen and (min-width: 30rem) {
   .file-upload-img > img {
     height: auto;
-    max-height: 28rem;
-    max-width: 28rem;
+    max-height: 20rem;
+    max-width: 20rem;
     width: auto;
   }
   .file-upload-img__placeholder > span:first-child {
-    font-size: 3.5rem;
+    font-size: 2rem;
     padding: 7rem 1rem 4rem;
   }
 }

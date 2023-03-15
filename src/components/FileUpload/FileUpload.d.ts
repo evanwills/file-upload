@@ -53,6 +53,12 @@ export type fileData = {
    */
   ready: boolean,
   /**
+   * Whether or not to force a reload of the component
+   *
+   * @property {boolean} relaod
+   */
+  reload: boolean,
+  /**
    * Current file size (in Bytes)
    *
    * @property {string} size
