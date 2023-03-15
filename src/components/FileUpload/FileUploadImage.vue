@@ -46,6 +46,22 @@ export default {
      */
     isFocused: { type: Boolean, required: true },
     /**
+     * Whether or not this file is ready to be rendered
+     *
+     * @property {boolean} isReady
+     */
+    isReady: { type: Boolean, required: false },
+    /**
+     * Whether or not this file is surplus
+     *
+     * (i.e. the maximum number of good files has already been
+     * reached. This file may be good but there are already enough
+     * so it can't be included in the upload)
+     *
+     * @property {boolean} isSurplus
+     */
+    isSurplus: { type: Boolean, required: true },
+    /**
      * Whether or not this file's size exceedes the maximum allowed
      *
      * @property
@@ -88,16 +104,6 @@ export default {
      * @property {string} fileName
      */
     fileName: { type: String, required: true },
-    /**
-     * Whether or not this file is surplus
-     *
-     * (i.e. the maximum number of good files has already been
-     * reached. This file may be good but there are already enough
-     * so it can't be included in the upload)
-     *
-     * @property {boolean} isSurplus
-     */
-    isSurplus: { type: Boolean, required: true },
   },
 
   data: function () : fileUploadImgState {
@@ -105,6 +111,8 @@ export default {
       isBad: false,
       wrapClass: '',
       alt: '',
+      _ext: '',
+      _fileName: '',
     }
   },
 
@@ -166,18 +174,49 @@ export default {
     getID: function (suffix: string): string {
         return getFieldID(this.id, suffix);
     },
+
+    getBtnBlockClass: function () : string {
+      const tmp = 'file-upload-img__btn-block';
+
+      return (this.isFocused)
+        ? `${tmp} ${tmp}--show`
+        : tmp;
+    },
+
+    getPlaceholderClass: function () : string {
+      const tmp = 'file-upload-img__placeholder';
+
+      return (this.isReady)
+        ? `${tmp} ${tmp}--processing`
+        : tmp;
+    }
   },
 
   mounted: function () : void {
+    const tmp = 'file-upload-img';
     console.group('FileUploadImage.mounted()')
-    console.groupEnd();
-    // if (this.tooBig === true || this.badType === true) {
+    console.log('this.ext:', this.ext)
+    console.log('this.fileType:', this.fileType)
+    console.log('this.isTooBig:', this.isTooBig)
+    console.log('this.isBadType:', this.isBadType)
+    console.log('this.isSurplus:', this.isSurplus)
+    if (this.isTooBig === true || this.isBadType === true) {
       this.isBad = true;
 
-      this.wrapClass = 'file-upload-img__bad'
-    // } else if (this.isSurplus === true) {
-      this.wrapClass = 'file-upload-img__surplus'
-    // }
+      this.wrapClass = `${tmp} ${tmp}--bad`;
+    } else if (this.isSurplus === true) {
+      this.wrapClass = `${tmp} ${tmp}--surplus`;
+    } else {
+      this.wrapClass = tmp;
+    }
+
+    this._ext = (this.isReady === false)
+      ? `Processing ${this.ext} image`
+      : this.ext;
+    this._fileName = this.fileName.replace(/([^a-z0-9]+)/ig, '$1&ZeroWidthSpace;')
+    console.log('this.isBad:', this.isBad)
+    console.log('this.wrapClass:', this.wrapClass)
+    console.groupEnd();
   },
 }
 
@@ -186,23 +225,72 @@ export default {
 <template>
   <figure :class="wrapClass">
     <img v-if="fileSrc !== ''" :src="fileSrc" :alt="alt" />
-    <span v-else class="file-upload-img__placeholder"></span>
-    <button v-if="total > 1" v-on:click="deleteClick">Delete</button>
-    <label v-if="isSurplus === false" class="file-upload-img__replace">
-      Replace
-      <input type="file" class="visually-hidden" :id="getID('extra-input')" :accept="accepted" v-on:change="replaceClick" />
-    </label>
-    <button v-if="isBad === false && canMove === true && pos > 0"
-      v-on:click="moveLeftClick">Move left</button>
-    <button v-if="isBad === false && canMove === true && pos < total" v-on:click="moveRightClick">Move right</button>
+    <div v-else :class="getPlaceholderClass()">
+      <span>{{ ext }}</span>
+      <span v-html="_fileName"></span>
+    </div>
     <figcaption>
       <span class="visually-hidden"></span>
-      <p v-if="isTooBig === true"></p>
+      <p v-if="isTooBig === true" class="file-upload-img__bad">This file is too large to be uploaded. Please replace it with a smaller version or delete it from the upload list</p>
+      <p v-if="isBadType === true" class="file-upload-img__bad-msg">You cannot upload a <code>.{{ ext }}</code> type file. Please delete or replace it.</p>
+      <p v-if="isSurplus === true" class="file-upload-img__bad-msg">There are already too many files in the list. Either move this file up the list or delete it.</p>
     </figcaption>
+    <span v-if="isReady || isBad" :class="getBtnBlockClass()">
+      <button v-if="canMove === true && isBad === false && pos > 0"
+        v-on:click="moveLeftClick" class="file-upload-img__left" :tabindex="(isFocused === false) ? -1 : undefined">Move left</button>
+      <button v-if="canMove === true && isBad === false && pos < (total - 1)" v-on:click="moveRightClick" class="file-upload-img__right" :tabindex="(isFocused === false) ? -1 : undefined">Move right</button>
+      <label v-if="isSurplus === false" class="file-upload-img__replace">
+        Replace
+        <input type="file" class="visually-hidden" :id="getID('extra-input')" :accept="accepted" v-on:change="replaceClick" :tabindex="(isFocused === false) ? -1 : undefined" />
+      </label>
+      <button v-if="total > 1 || isBad" v-on:click="deleteClick" class="file-upload-img__delete" :tabindex="(isFocused === false) ? -1 : undefined">Delete</button>
+    </span>
   </figure>
 </template>
 
 <style>
+.file-upload-img {
+  box-sizing: border-box;
+  display: flex;
+  margin: 0;
+  overflow-y: auto;
+  padding: 0;
+  position: relative;
+  flex-direction: column;
+  height: 100%;
+}
+.file-upload-img--bad {
+  padding: 0 0 2rem;
+}
+.file-upload-img > img {
+  display: block;
+  height: auto;
+  margin: 0 auto;
+  text-align: center;
+  width: 100%;
+}
+.file-upload-img__btn-block {
+  bottom: 0;
+  box-sizing: border-box;
+  column-gap: 1rem;
+  display: flex;
+  /* display: block; */
+  flex-wrap: wrap;
+  justify-content: center;
+  /* left: 50%; */
+  opacity: 0;
+  padding-top: 0.5rem;
+  row-gap: 0.5rem;
+  transition: opacity ease-in-out 0.3s;
+  /* transform: translateX(-50%); */
+  /* position: absolute; */
+  white-space: normal;
+  text-align: center;
+  width: 100%;
+}
+.file-upload-img__btn-block--show {
+  opacity: 1;
+}
 .file-upload-img__bad img {
   position: relative;
 }
@@ -214,5 +302,61 @@ export default {
   right: 0;
   bottom: 0;
   background-color: rgba(255, 0, 0, 0.8);
+}
+.file-upload-img__replace {
+  background-color: #000;
+  border-radius: 0.5rem;
+  color: #fff;
+  padding: 0.6em 1.2em;
+  order: -1;
+}
+.file-upload-img__replace:focus-within {
+  outline: 0.1rem solid #005
+}
+.file-upload-img__left {
+  order: -2;
+}
+.file-upload-img__right {
+  order: 1;
+}
+.file-upload-img__placeholder {
+  background-color: #eee;
+  border: 0.3rem solid #aaa;
+  border-radius: 0.5rem;
+  color: #888;
+  font-family: 'Courier New', Courier, monospace;
+  margin: 0 auto;
+  padding-bottom: 1rem;
+  text-align: center;
+  width: 80%;
+  white-space: normal;
+}
+.file-upload-img__placeholder > span:first-child {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 5rem 0.5rem 2rem;
+  margin: 0 auto;
+}
+.file-upload-img__bad-msg {
+  background-color: #c00;
+  color: #fff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  margin: 1rem 2rem;
+  white-space: normal;
+}
+
+@media screen and (min-width: 30rem) {
+  .file-upload-img > img {
+    height: auto;
+    max-height: 28rem;
+    max-width: 28rem;
+    width: auto;
+  }
+  .file-upload-img__placeholder > span:first-child {
+    font-size: 3.5rem;
+    padding: 7rem 1rem 4rem;
+  }
 }
 </style>

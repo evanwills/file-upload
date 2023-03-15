@@ -12,6 +12,12 @@ export type fileData = {
    */
   badType: boolean,
   /**
+   * File extention for file type being uploaded
+   *
+   * @property {string} ext
+   */
+  ext: string,
+  /**
    * File object to be uploaded
    *
    * @property {File|null} file
@@ -114,6 +120,12 @@ export type fileUploadState = {
    */
   canConfirm: boolean,
   /**
+   * Number of pixels wide the window is
+   *
+   * @property {number} carouselOffset
+   */
+  carouselOffset: number,
+  /**
    * Whether or not the user has already selected the maximum number
    * of (valid) files they can
    *
@@ -214,6 +226,8 @@ export type fileUploadImgState = {
   isBad: boolean,
   wrapClass: string,
   alt: string,
+  _ext: string,
+  _fileName: string,
 }
 
 /**

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { fileData, fileUploadState, replaceData } from './FileUpload.d';
-import { defaultTypes, getAllowedTypes, getFieldID, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
+import { defaultTypes, getAllowedTypes, getFieldID, getFileExt, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
 import  ImageBlobReduce from 'image-blob-reduce';
 import FileUploadImage from './FileUploadImage.vue';
 // import  ImageBlobReduce from '@types/image-blob-reduce';
@@ -102,6 +102,8 @@ export default {
       allowedTypes: defaultTypes,
       badCount: 0,
       canConfirm: false,
+      carouselOffset: 0,
+      focusIndex: 0,
       full: false,
       genericTypeList: '',
       goodCount: 0,
@@ -110,32 +112,16 @@ export default {
       max: 1,
       maxPx: 1500,
       nextUID: 0,
-      focusIndex: 0,
       processingCount: 0,
-      uploadList: [],
-      uploadHelp: '',
       singleMax: 5242880,
       tooBig: false,
       totalMax: 15728640,
+      uploadHelp: '',
+      uploadList: [],
     };
   },
 
   methods: {
-    /**
-     * Toggle the upload user interface open or closed.
-     *
-     * If closing the upload user interface, all selected files will
-     * be removed from the upload list. Next time the user wants to
-     * upload, they will have to start form scratch.
-     */
-    toggleActive: function (): void {
-      this.active = !this.active;
-
-      if (this.active === false) {
-        this.uploadList = [];
-      }
-    },
-
     /**
      * Get list of classes to use on an element
      *
@@ -161,6 +147,26 @@ export default {
     },
 
     /**
+     * Get a class name (or names) for styling the image carousel
+     *
+     * @returns image carousel classes
+     */
+    carouselClass: function (): string {
+      const tmp = 'file-upload__carousel';
+      return `${tmp} ${tmp}--${this.uploadList.length} ${tmp}--${this.uploadList.length}-${this.focusIndex}`;
+    },
+
+    /**
+     * Remove all selected files from the upload list
+     */
+    clearAll: function (): void {
+      console.group('clearAll')
+      console.groupEnd();
+
+      this.uploadList = []
+    },
+
+    /**
      * Get a class name (or names) for styling the main upload
      * dialogue/modal
      *
@@ -183,26 +189,6 @@ export default {
     },
 
     /**
-     * Get a class name (or names) for styling the image carousel
-     *
-     * @returns image carousel classes
-     */
-    carouselClass: function (): string {
-      const tmp = 'file-upload__carousel';
-      return `${tmp} ${tmp}--${this.uploadList.length}`;
-    },
-
-    /**
-     * Remove all selected files from the upload list
-     */
-    clearAll: function (): void {
-      console.group('clearAll')
-      console.groupEnd();
-
-      this.uploadList = []
-    },
-
-    /**
      * Get a unique ID to user as the value for a label's `for`
      * attribute and an ID for the associated input field.
      *
@@ -213,24 +199,106 @@ export default {
     getID: function (suffix: string): string {
       return getFieldID(this.id, suffix);
     },
-
     /**
-     * Process all files user has selected using a file input field
+     * Add a new file to the list or replace an existing file in
+     * the list of files the user has selected for uploading.
      *
-     * @param e File input change event
+     * @param data matadata about the file to be uploaded
      */
-    processSelectedFiles: function (e: Event): void {
-      const files = (e.target as HTMLInputElement).files;
-      console.log('event:', e);
-      console.log('event.target:', e.target);
-      console.log('files:', files);
-      // const selectedFiles = event.target.files;
-
-      if (typeof files !== null) {
-        for (let a = 0; a < (files as FileList).length; a += 1) {
-          this.processNewFile((files as FileList)[a]);
+    addFileToList: function (data: fileData): void {
+      let done = false;
+      for (let a = 0; a < this.uploadList.length; a += 1) {
+        if (this.uploadList[a].name === data.name) {
+          this.uploadList[a] = data;
+          done = true;
         }
       }
+
+      if (done === false) {
+        this.uploadList.push(data);
+      }
+    },
+
+    /**
+     * Go through the list of selected files and check if there are
+     * any issues posed by the group of files as a whole.
+     */
+    checkForIssues: function (doSort: boolean = false): void {
+      let bad = 0;
+      let good = 0;
+      let totalBytes = 0;
+      for (let a = 0; a < this.uploadList.length; a += 1) {
+        if (this.uploadList[a].badType === false &&
+            this.uploadList[a].tooBig === false
+        ) {
+          good += 1;
+          this.uploadList[a].surplus = (good > this.max);
+          totalBytes += this.uploadList[a].size;
+        } else {
+          bad += 1;
+        }
+      }
+
+      this.goodCount = good;
+      this.badCount = bad;
+      this.full = (good > this.max);
+      this.tooBig = (totalBytes > this.totalMax);
+
+      this.canConfirm = (
+        (this.goodCount > 0 && this.tooBig === false) &&
+        (
+          (this.badCount === 0 && this.full === false)
+          || this.autoExclude === true
+        )
+      );
+
+      if (doSort === true) {
+        this.uploadList.sort((a: fileData, b: fileData): number => {
+          if (a.id > b.id) {
+            return 1;
+          } else if (a.id < b.id) {
+            return -1;
+          } else {
+            return 0;
+          }
+        });
+      }
+
+      // console.log('this:', this);
+      console.log('this.uploadList:', this.uploadList);
+    },
+
+    /**
+     * Delete selected file from the list of files user has selected
+     * (and remove it from the file carousel).
+     *
+     * @param fileName Name of file to be removed from the list.
+     */
+    deleteFile: function (fileName: string): void {
+      // console.group('FileUpload - deleteFile()')
+      // console.log('fileName:', fileName);
+
+      // console.groupEnd();
+      this.uploadList = this.uploadList.filter((file : fileData) => file.name !== fileName);
+      // this.checkForIssues();
+    },
+
+    /**
+     * Get inline carousel styles
+     *
+     * @returns Inline CSS for styling carousel
+     */
+    getCarouselOffset: function () : string {
+      return `--carousel-offset: calc(${this.carouselOffset}px - 2rem);`;
+    },
+
+    /**
+     * Get inline carousel styles
+     *
+     * @returns Inline CSS for styling carousel
+     */
+    getCarouselStyle: function () : string {
+      return `--carousel-items: ${this.uploadList.length}; --carousel-pos: ${this.focusIndex};`;
     },
 
     /**
@@ -277,86 +345,6 @@ export default {
     },
 
     /**
-     * Add a new file to the list or replace an existing file in
-     * the list of files the user has selected for uploading.
-     *
-     * @param data matadata about the file to be uploaded
-     */
-    addFileToList: function (data: fileData): void {
-      let done = false;
-      for (let a = 0; a < this.uploadList.length; a += 1) {
-        if (this.uploadList[a].name === data.name) {
-          this.uploadList[a] = data;
-          done = true;
-        }
-      }
-
-      if (done === false) {
-        this.uploadList.push(data);
-      }
-    },
-
-    /**
-     * Go through the list of selected files and check if there are
-     * any issues posed by the group of files as a whole.
-     */
-    checkForIssues: function (): void {
-      let bad = 0;
-      let good = 0;
-      let totalBytes = 0;
-      for (let a = 0; a < this.uploadList.length; a += 1) {
-        if (this.uploadList[a].badType === false &&
-            this.uploadList[a].tooBig === false
-        ) {
-          good += 1;
-          this.uploadList[a].surplus = (good > this.max);
-          totalBytes += this.uploadList[a].size;
-        } else {
-          bad += 1;
-        }
-      }
-
-      this.goodCount = good;
-      this.badCount = bad;
-      this.full = (good > this.max);
-      this.tooBig = (totalBytes > this.totalMax);
-
-      this.canConfirm = (
-        (this.goodCount > 0 && this.tooBig === false) &&
-        (
-          (this.badCount === 0 && this.full === false)
-          || this.autoExclude === true
-        )
-      );
-
-      this.uploadList.sort((a: fileData, b: fileData): number => {
-        if (a.id > b.id) {
-          return 1;
-        } else if (a.id < b.id) {
-          return -1;
-        } else {
-          return 0;
-        }
-      });
-      // console.log('this:', this);
-      console.log('this.uploadList:', this.uploadList);
-    },
-
-    /**
-     * Delete selected file from the list of files user has selected
-     * (and remove it from the file carousel).
-     *
-     * @param fileName Name of file to be removed from the list.
-     */
-    deleteFile: function (fileName: string): void {
-      console.group('FileUpload - deleteFile()')
-      console.log('fileName:', fileName);
-
-      console.groupEnd();
-      this.uploadList = this.uploadList.filter((file : fileData) => file.name !== fileName)
-    },
-
-    /**
      * Change the order of the files in the list so that the
      * selected file is moved to the left of where it was.
      *
@@ -370,6 +358,7 @@ export default {
       console.log('this.uploadList (before):', this.uploadList);
 
       this.uploadList = moveFile(this.uploadList, fileName, -1);
+      this.checkForIssues();
       console.log('this.uploadList (after):', this.uploadList);
       console.groupEnd();
     },
@@ -388,6 +377,7 @@ export default {
       console.log('this.uploadList (before):', this.uploadList);
 
       this.uploadList = moveFile(this.uploadList, fileName, 1);
+      this.checkForIssues();
 
       console.log('this.uploadList (after):', this.uploadList);
       console.groupEnd();
@@ -397,59 +387,24 @@ export default {
      * Move the focus image in the carousel one step to the right
      */
     next: function (): void {
-      console.group('next()')
-      console.log('this.focusIndex (before):', this.focusIndex);
       if (this.focusIndex < (this.uploadList.length - 1)) {
         this.focusIndex += 1;
       } else {
         // Wrap focus around to beginning
         this.focusIndex = 0;
       }
-      console.log('this.focusIndex (after):', this.focusIndex);
-      console.groupEnd();
     },
 
     /**
      * Move the focus image in the carousel one step to the left
      */
     previous: function (): void {
-      console.group('previous()')
-      console.log('this.focusIndex (before):', this.focusIndex);
       if (this.focusIndex > 0) {
         this.focusIndex -= 1;
       } else {
         // Wrap focus around to end
         this.focusIndex = (this.uploadList.length - 1);
       }
-
-      console.log('this.focusIndex (after):', this.focusIndex);
-      console.groupEnd();
-    },
-
-    /**
-     * Process a single new file the user has selected
-     *
-     * @param file New file to be added to the list of files the
-     *             user has selected
-     */
-    processNewFile: function (file: File): void {
-      const tmp: fileData = {
-        id: this.getUID(),
-        badType: this.accepted.indexOf(file.type) === 0,
-        file: null,
-        lastModified: file.lastModified,
-        name: file.name,
-        ready: false,
-        size: file.size,
-        originalSize: file.size,
-        src: '',
-        surplus: false,
-        tooBig: file.size > this.singleMax,
-        type: file.type
-      };
-
-      this.addFileToList(tmp);
-      this.processFileInner(tmp, file);
     },
 
     /**
@@ -485,6 +440,14 @@ export default {
             data.ready = true;
             data.size = newFile.size;
             data.tooBig = newFile.size > this.singleMax;
+            data.ext = getFileExt(newFile);
+
+            console.group('processFileInner()')
+            console.log('data.size:', data.size)
+            console.log('newFile.size:', newFile.size)
+            console.log('this.singleMax:', this.singleMax)
+            console.log('data.tooBig:', data.tooBig)
+            console.groupEnd();
 
             this.addFileToList(data);
             this.checkForIssues();
@@ -500,6 +463,67 @@ export default {
     },
 
     /**
+     * Process a single new file the user has selected
+     *
+     * @param file New file to be added to the list of files the
+     *             user has selected
+     */
+    processNewFile: function (file: File): void {
+      // let ext = '';
+      // try {
+      //   ext = getFileExt(file);
+      // } catch
+      const tmp: fileData = {
+        id: this.getUID(),
+        badType: this.accepted.indexOf(file.type) === 0,
+        ext: getFileExt(file),
+        file: null,
+        lastModified: file.lastModified,
+        name: file.name,
+        ready: false,
+        size: file.size,
+        originalSize: file.size,
+        src: '',
+        surplus: false,
+        tooBig: file.size > this.singleMax,
+        type: file.type
+      };
+
+      this.addFileToList(tmp);
+      this.focusIndex = (this.uploadList.length - 1);
+
+      this.processFileInner(tmp, file);
+    },
+
+    /**
+     * Process all files user has selected using a file input field
+     *
+     * @param e File input change event
+     */
+    processSelectedFiles: function (e: Event): void {
+      const files = (e.target as HTMLInputElement).files;
+      console.log('event:', e);
+      console.log('event.target:', e.target);
+      console.log('files:', files);
+      // const selectedFiles = event.target.files;
+
+      // Put the focus at the start of the latest additional files
+      const newIndex = (this.uploadList.length > 0)
+        ? this.uploadList.length
+        : 0;
+
+      if (typeof files !== null) {
+        for (let a = 0; a < (files as FileList).length; a += 1) {
+          this.processNewFile((files as FileList)[a]);
+        }
+
+        // Make sure the focus is in the right place
+        this.focusIndex = newIndex;
+      }
+    },
+
+
+    /**
      * Find an old file in the list of selected files and replace it
      * with the new one the user has selected.
      *
@@ -507,17 +531,17 @@ export default {
      * @param newFile New file to replace old one.
      */
     replaceFile: function ({ oldName, newFile } : replaceData): void {
-      console.group('FileUpload - replaceFile()')
-      console.log('oldName:', oldName);
-      console.log('newFile:', newFile);
-      console.log('this.uploadList.length:', this.uploadList.length);
+      // console.group('FileUpload - replaceFile()')
+      // console.log('oldName:', oldName);
+      // console.log('newFile:', newFile);
+      // console.log('this.uploadList.length:', this.uploadList.length);
 
       let ok = false;
 
       for (let a = 0; a < this.uploadList.length; a += 1) {
-        console.log('oldName:', oldName);
-        console.log('this.uploadList[' + a + ']:', this.uploadList[a])
-        console.log('this.uploadList[' + a + '].name:', this.uploadList[a].name)
+        // console.log('oldName:', oldName);
+        // console.log('this.uploadList[' + a + ']:', this.uploadList[a])
+        // console.log('this.uploadList[' + a + '].name:', this.uploadList[a].name)
 
         if (this.uploadList[a].name === oldName) {
           ok = true;
@@ -530,6 +554,7 @@ export default {
           this.uploadList[a].size = newFile.size;
           this.uploadList[a].originalSize = newFile.size;
           this.uploadList[a].src = '';
+          this.uploadList[a].ext = getFileExt(newFile);
           this.uploadList[a].tooBig = newFile.size > this.singleMax;
           this.uploadList[a].type = newFile.type;
 
@@ -543,11 +568,36 @@ export default {
         throw new Error('could not find file ("' + oldName + '") to replace with "' + newFile.name + '"');
       }
 
-      console.groupEnd();
+      // console.groupEnd();
+    },
+
+    /**
+     * Toggle the upload user interface open or closed.
+     *
+     * If closing the upload user interface, all selected files will
+     * be removed from the upload list. Next time the user wants to
+     * upload, they will have to start form scratch.
+     */
+    toggleActive: function (): void {
+      this.active = !this.active;
+
+      if (this.active === false) {
+        this.uploadList = [];
+      }
+    },
+
+    updateCarouselOffset: function () {
+      // console.group('updateCarouselOffset()')
+      // console.log('this.carouselOffset (before):', this.carouselOffset)
+      const body = document.getElementsByTagName('body');
+      this.carouselOffset = Math.floor(body[0].clientWidth / 2);
+      // console.log('this.carouselOffset (after):', this.carouselOffset)
+      // console.groupEnd();
     },
   },
 
   mounted: function (): void {
+    // console.group('mounted()')
     this.allowedTypes = getAllowedTypes(this.types);
     const genericTypes: string[] = [];
     const typeList: string[] = [];
@@ -568,11 +618,13 @@ export default {
 
     this.maxPx = parseInt(this.maxPixels);
     this.singleMax = humanFileSizeToBytes(this.maxSingle);
+    // console.log('this.singleMax:', this.singleMax);
     this.totalMax = humanFileSizeToBytes(this.maxTotal);
+    // console.log('this.totalMax:', this.maxTotal);
     this.humanTypeList = humanImplode(typeList);
     this.genericTypeList = humanImplode(genericTypes);
-    console.log('human file types:', this.humanTypeList);
-    console.log('generic file types:', this.genericTypeList);
+    // console.log('human file types:', this.humanTypeList);
+    // console.log('generic file types:', this.genericTypeList);
 
     // --------------------------------------------------------------
     // START: Prepare file input label text
@@ -610,17 +662,27 @@ export default {
     // helpMsg += ` ${this.humanTypeList}`;
     helpMsg += ` file${s}`;
     this.uploadHelp = helpMsg;
-    // END: Prepare file input label text
+
+    //  END:  Prepare file input label text
     // --------------------------------------------------------------
-    console.log('this:', this);
-    console.log('this.id:', this.id);
+    // START: Get carousel offset
+
+    this.updateCarouselOffset();
+
+    window.addEventListener('resize', this.updateCarouselOffset, true);
+
+    //  END:  Get carousel offset
+    // --------------------------------------------------------------
+    // console.log('this:', this);
+    // console.log('this.id:', this.id);
+    // console.groupEnd();
   },
   components: { FileUploadImage }
 }
 </script>
 
 <template>
-  <div class='file-upload'>
+  <div :id="id" class="file-upload">
     <button v-on:click="toggleActive" :tabindex="active ? -1 : undefined">
       Upload <span class="visually-hidden">{{ genericTypeList }} files</span>
     </button>
@@ -634,42 +696,48 @@ export default {
         <h2 class="file-upload__head">{{ label }}</h2>
         <p v-if="helpTxt !== ''">{{ helpTxt }}</p>
       </header>
-      <main v-if="uploadList.length > 0">
-        <ul :class="carouselClass()">
-          <li v-for="(file, index) in uploadList" :key="`file-${file.name}`" class="file-upload__carousel__item">
-            <FileUploadImage :accepted="accepted"
-                             :id="getImgID(file.name)"
-                             :pos="index"
-                             :total="(uploadList.length - 1)"
-                             :file-src="file.src"
-                             :file-name="file.name"
-                             :file-size="file.size"
-                             :file-type="file.type"
-                             :ext="file.type"
-                             :is-bad-type="file.badType"
-                             :is-focused="focusIndex === index"
-                             :is-too-big="file.tooBig"
-                             :is-surplus="file.surplus"
-                             @delete="deleteFile"
-                             @replace="replaceFile"
-                             @moveleft="moveFileLeft"
-                             @moveright="moveFileRight"></FileUploadImage>
-            <!-- <img :src="file.src" :alt="file.name" /> -->
-          </li>
-        </ul>
+      <main v-if="uploadList.length > 0" class="file-upload__carousel__wrap">
+        <div class="file-upload__carousel__outer" :style="getCarouselOffset()">
+          <ul class="file-upload__carousel" :style="getCarouselStyle()">
+            <li v-for="(file, index) in uploadList" :key="`file-${file.name}`" class="file-upload__carousel__item">
+              <FileUploadImage :accepted="accepted"
+                              :id="getImgID(file.name)"
+                              :pos="index"
+                              :total="uploadList.length"
+                              :file-src="file.src"
+                              :file-name="file.name"
+                              :file-size="file.size"
+                              :file-type="file.type"
+                              :ext="file.ext"
+                              :is-bad-type="file.badType"
+                              :is-focused="focusIndex === index"
+                              :is-too-big="file.tooBig"
+                              :is-surplus="file.surplus"
+                              :is-ready="file.ready"
+                              :can-move="reorder"
+                              @delete="deleteFile"
+                              @replace="replaceFile"
+                              @moveleft="moveFileLeft"
+                              @moveright="moveFileRight"></FileUploadImage>
+              <!-- <img :src="file.src" :alt="file.name" /> -->
+            </li>
+          </ul>
+        </div>
+        <button v-if="(uploadList.length > 1)" class="file-upload__carousel_btn file-upload__carousel_btn--previous" v-on:click="previous"><span class="visually-hidden">Previous</span></button>
+        <button v-if="(uploadList.length > 1)" class="file-upload__carousel_btn file-upload__carousel_btn--next" v-on:click="next"><span class="visually-hidden">Next</span></button>
       </main>
       <footer>
         <p v-if="uploadList.length === 0">
           <label :for="getID('main-input')" class="file-upload__label">{{ uploadHelp }}</label>
           <input type="file" class="file-upload__input visually-hidden" :id="getID('main-input')" :multiple="(max > 1) ? true : false" :accept="accepted" v-on:change="processSelectedFiles" />
         </p>
-        <p v-else-if="goodCount > 0 && uploadList.length <= max && badCount === 0" class="file-upload__add-confirm">
-          <label v-if="full === false" :for="getID('extra-input')" class="file-upload__add-confirm__btn">Add another file</label>
-          <input type="file" class="file-upload__input visually-hidden" :id="getID('extra-input')" :multiple="(max > 1) ? true : false" :accept="accepted" v-on:change="processSelectedFiles" />
-          <button v-on:click="$emit('confirm-upload')" class="file-upload__add-confirm__btn">Confirm and upload</button>
-        </p>
         <p v-else-if="goodCount > 0 && (uploadList.length > max || badCount > 0)">
           Please remove invalid and/or excess files from upload list
+        </p>
+        <p v-if="uploadList.length > 0" class="file-upload__add-confirm">
+          <label v-if="full === false" :for="getID('extra-input')" class="file-upload__add-btn">Add another file</label>
+          <input type="file" class="file-upload__input visually-hidden" :id="getID('extra-input')" :multiple="(max > 1) ? true : false" :accept="accepted" v-on:change="processSelectedFiles" />
+          <button v-if="goodCount > 0 && uploadList.length <= max" v-on:click="$emit('confirm-upload')" class="file-upload__confirm--btn">Confirm and upload</button>
         </p>
       </footer>
       <button class="file-upload__main-close" v-on:click="toggleActive" :tabindex="active ? undefined : -1">
@@ -757,7 +825,7 @@ export default {
   /* background-color: #009; */
   /* display: flex; */
   flex-grow: 1;
-  overflow: hidden;
+  overflow: hidden auto;
   position: relative;
 }
 .file-upload__dialogue > main::before,
@@ -783,7 +851,7 @@ export default {
   transform: rotate(180deg);
 }
 .file-upload__dialogue > footer {
-  padding: 2rem 1rem 2rem 2rem;
+  padding: 0 1rem 2rem 2rem;
 }
 .file-upload__main-close {
   background-color: #fff;
@@ -836,60 +904,103 @@ export default {
   /* justify-content: space-between; */
   column-gap: 2rem;
 }
+.file-upload__carousel__wrap {
+  position: relative;
+}
+.file-upload__carousel__outer {
+  position: relative;
+}
 .file-upload__carousel {
   align-content: stretch;
   align-items: stretch;
-  column-gap: 2rem;
+  box-sizing: border-box;
+  /* column-gap: 2rem; */
   display: flex;
   flex-wrap: nowrap;
   list-style: none;
-  margin: 0 -2rem;
+  margin: 0;
   padding: 0;
-  transform: translateX(-25%);
+  /* transform: translateX(2.5rem); */
   /* border: 0.05rem solid #000; */
   white-space: nowrap;
+  transition: transform ease-in-out 0.3s;
+  width: calc(100% * var(--carousel-items));
+  transform: translateX(calc(var(--carousel-pos) * calc(-100% / var(--carousel-items))));
 }
 
 .file-upload__carousel li {
-  align-content: stretch;
-  align-items: center;
+  /* align-content: stretch; */
+  /* align-items: center; */
+  box-sizing: border-box;
   /* border: 0.05rem solid #000; */
   display: flex;
-  display: inline-block;
+  /* display: inline-block; */
   flex-direction: column;
-  flex-grow: 1;
-  padding: 0;
-  margin: 0 1rem;
-  width: 100%;
-
+  /* flex-grow: 1; */
+  padding: 0 1rem;
+  margin: 0;
+  width: 70%;
+  /* max-width: 30rem; */
 }
 
-.file-upload__carousel img {
+.file-upload__carousel_btn {
+  background-color: transparent;
+  /* border: 0.3rem solid #090; */
+  border-radius: 50%;
   display: block;
-  width: 100%;
-  max-width: 30rem;
+  font-size: 0.5rem;
+  height: 1.75rem;
+  /* line-height: 1rem; */
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.75rem;
+  z-index: 20000;
+  transform-origin: 50% 50%;
+}
+.file-upload__carousel_btn::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: '';
+  border: 0.3rem solid #090;
+  width: 1rem;
+  height: 1rem;
+  border-left: none;
+  border-top: none;
+}
+.file-upload__carousel_btn--next {
+  right: 0;
+}
+.file-upload__carousel_btn--next::after {
+  transform: translate(-10%, 15%) rotate(-45deg);
+}
+.file-upload__carousel_btn--previous {
+  left: 0;
+}
+.file-upload__carousel_btn--previous::after {
+  transform: translate(40%, 15%) rotate(135deg);
+}
+.file-upload__add-btn {
+  background-color: #000;
+  border-radius: 0.5rem;
+  color: #fff;
+  padding: 0.6em 1.2em;
   text-align: center;
-  margin: 0 auto;
 }
 
-.file-upload__carousel--1 { width: 100%; }
-.file-upload__carousel--1 li { width: 100%; }
-.file-upload__carousel--2 { width: 200%; }
-.file-upload__carousel--2 li { width: 50%; }
-.file-upload__carousel--3 { width: 300%; }
-.file-upload__carousel--3 li { width: 33.33%; }
-.file-upload__carousel--4 { width: 100%; }
-.file-upload__carousel--4 li { width: 25%; }
-.file-upload__carousel--5 { width: 500%; }
-.file-upload__carousel--6 { width: 600%; }
-.file-upload__carousel--7 { width: 700%; }
-.file-upload__carousel--8 { width: 800%; }
-.file-upload__carousel--9 { width: 900%; }
-.file-upload__carousel--10 { width: 1000%; }
-.file-upload__carousel--11 { width: 1100%; }
-.file-upload__carousel--12 { width: 1200%; }
-.file-upload__carousel--13 { width: 1300%; }
-.file-upload__carousel--14 { width: 1400%; }
-.file-upload__carousel--15 { width: 1500%; }
-.file-upload__carousel--16 { width: 1600%; }
+@media screen and (min-width: 30rem) {
+  .file-upload__carousel__outer {
+    left: calc(var(--carousel-offset) - 15rem);
+  }
+  .file-upload__carousel {
+    --carousel-steps: calc(-100% / var(--carousel-items));
+    width: calc(30rem * var(--carousel-items));
+    /* transform: translateX(calc(calc(var(--carousel-pos) * var(--carousel-steps)) + calc(var(--carousel-steps) / -1.6))); */
+  }
+  .file-upload__carousel li {
+    width: 30rem;
+  }
+}
+
 </style>

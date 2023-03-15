@@ -52,6 +52,17 @@ export const getAllowedTypes = (types: string) : mimeType[] => {
   }
 };
 
+export const getFileExt = (file: File) : string => {
+  for (const prop in fileTypes) {
+    if (file.type === fileTypes[prop].mime) {
+      return fileTypes[prop].name;
+    }
+  }
+
+  return file.name.replace(/^.*?\.(?=[^.]+$)/i, '');
+  throw new Error('Could not find allowed type matching "' + file.type + '"')
+}
+
 /**
  * Get a unique ID to user as the value for a label's `for`
  * attribute and an ID for the associated input field.
@@ -92,10 +103,10 @@ export const humanFileSizeToBytes = (humanSize: string) : number => {
     const i = units.indexOf(unit);
 
     if (i > -1 && num > 0) {
-      return Math.round(num * (1024 ^ i));
+      return Math.round(num * (1024 ** i));
     } else {
       console.error(errorMsg);
-      return (2 * (1024 ^ 2));
+      return (2 * (1024 ** 2));
     }
   }
 };
