@@ -1,7 +1,8 @@
 <script lang="ts">
+import  ImageBlobReduce from 'image-blob-reduce';
+
 import { fileData, fileUploadState, replaceData } from './FileUpload.d';
 import { defaultTypes, getAllowedTypes, getFieldID, getFileExt, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
-import  ImageBlobReduce from 'image-blob-reduce';
 import FileUploadImage from './FileUploadImage.vue';
 // import  ImageBlobReduce from '@types/image-blob-reduce';
 
@@ -43,6 +44,11 @@ export default {
     label: { type: String, required: true },
     /**
      * Maximum number of files the user can upload at one time
+     *
+     * * If `maxFiles` is set to zero (0) maximum is unlimited
+     *   (actual limit will be set to: 9999).
+     * * If `maxFiles` is negative or cannot be parsed as an integer,
+     *   the default (1) will be used
      *
      * @property {number} maxFiles
      */
@@ -698,8 +704,15 @@ export default {
     this.max = parseInt(this.maxFiles);
 
     if (this.max < 1) {
-      this.max = 1;
-      console.error('invalid maxFiles set');
+      if (this.max === 0) {
+        // User has set max to unlimited
+        // Make max a rediculously high number so it's effectively
+        // unlimited
+        this.max = 9999;
+      } else {
+        this.max = 1;
+        console.error('invalid maxFiles set');
+      }
     }
 
     if (this.min < 1) {
@@ -743,27 +756,36 @@ export default {
     // console.log('this.id:', this.id);
     // console.groupEnd();
   },
+
   components: { FileUploadImage }
 }
 </script>
 
 <template>
   <div :id="id" class="file-upload">
-    <button v-on:click="toggleActive" :tabindex="active ? -1 : undefined">
-      Upload <span class="visually-hidden">{{ genericTypeList }} files</span>
+    <button v-on:click="toggleActive"
+           :tabindex="active ? -1 : undefined">
+      Upload
+      <span class="visually-hidden">{{ genericTypeList }} files</span>
     </button>
-    <button :class="activeClass('bg-close')" v-on:click="toggleActive" :tabindex="active ? undefined : -1">
+    <button :class="activeClass('bg-close')"
+             v-on:click="toggleActive" :tabindex="active ? undefined : -1">
       <span class="visually-hidden">
         Close upload {{ genericTypeList }} files
       </span>
     </button>
+
     <article :class="dialogueClass()">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
         <p v-if="helpTxt !== ''">{{ helpTxt }}</p>
       </header>
       <main v-if="uploadList.length > 0" class="file-upload__carousel__wrap">
-        <button v-if="(uploadList.length > 1)" class="file-upload__carousel_btn file-upload__carousel_btn--previous" v-on:click="previous"><span class="visually-hidden">Previous</span></button>
+        <button v-if="(uploadList.length > 1)"
+                class="file-upload__carousel_btn file-upload__carousel_btn--previous"
+                v-on:click="previous">
+          <span class="visually-hidden">Previous</span>
+        </button>
         <div class="file-upload__carousel__outer" :style="getCarouselOffset()">
           <ul class="file-upload__carousel" :style="getCarouselStyle()">
             <li v-for="(file, index) in uploadList" :key="`file-${file.name}--${file.reload ? 1 : 0}`" class="file-upload__carousel__item">
@@ -790,23 +812,49 @@ export default {
             </li>
           </ul>
         </div>
-        <button v-if="(uploadList.length > 1)" class="file-upload__carousel_btn file-upload__carousel_btn--next" v-on:click="next"><span class="visually-hidden">Next</span></button>
+        <button v-if="(uploadList.length > 1)"
+                class="file-upload__carousel_btn file-upload__carousel_btn--next"
+                v-on:click="next">
+          <span class="visually-hidden">Next</span>
+        </button>
       </main>
       <footer>
         <p v-if="uploadList.length === 0">
-          <label :for="getID('main-input')" class="file-upload__label">{{ uploadHelp }}</label>
-          <input type="file" class="file-upload__input visually-hidden" :id="getID('main-input')" :multiple="(max > 1) ? true : false" :accept="accepted" v-on:change="processSelectedFiles" />
+          <label :for="getID('main-input')"
+                  class="file-upload__label">
+            {{ uploadHelp }}
+            <input type="file"
+                   class="file-upload__input visually-hidden" :id="getID('main-input')"
+                  :multiple="(max > 1)"
+                  :accept="accepted" v-on:change="processSelectedFiles" />
+          </label>
         </p>
-        <p v-else-if="goodCount > 0 && (uploadList.length > max || badCount > 0)" class="file-upload__bad-list-msg">
+        <p v-else-if="goodCount > 0 && (uploadList.length > max || badCount > 0)"
+           class="file-upload__bad-list-msg">
           {{ getBadListMsg() }}
         </p>
         <p v-if="uploadList.length > 0" class="file-upload__add-confirm">
-          <label v-if="full === false" :for="getID('extra-input')" class="file-upload__add-btn">Add another file</label>
-          <input v-if="full === false" type="file" class="file-upload__input visually-hidden" :id="getID('extra-input')" :multiple="(max > 1 && (max - uploadList.length) > 1) ? true : false" :accept="accepted" v-on:change="processSelectedFiles" />
-          <button v-if="goodCount > 0 && uploadList.length <= max" v-on:click="handleConfirm" class="file-upload__confirm--btn">Confirm and upload</button>
+          <label v-if="full === false"
+                :for="getID('extra-input')"
+                class="file-upload__add-btn">
+            Add another file
+            <input type="file"
+                   class="file-upload__input visually-hidden"
+                  :id="getID('extra-input')"
+                  :multiple="(max > 1 && (max - uploadList.length) > 1)"
+                  :accept="accepted"
+                  v-on:change="processSelectedFiles" />
+          </label>
+          <button v-if="canConfirm === true"
+                  v-on:click="handleConfirm"
+                  class="file-upload__confirm--btn">
+            Confirm and upload
+          </button>
         </p>
       </footer>
-      <button class="file-upload__main-close" v-on:click="toggleActive" :tabindex="active ? undefined : -1">
+      <button class="file-upload__main-close"
+              v-on:click="toggleActive"
+             :tabindex="active ? undefined : -1">
         <span class="visually-hidden">
           Close upload {{ genericTypeList }} files
         </span>
@@ -816,7 +864,6 @@ export default {
 </template>
 
 <style>
-
 /**
  * Copied from Bootstrap 5.x
  */
@@ -917,7 +964,9 @@ export default {
   transform: rotate(180deg);
 }
 .file-upload__dialogue > footer {
-  padding: 0 1rem 2rem 2rem;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1rem 1rem;
 }
 .file-upload__main-close {
   background-color: #fff;
@@ -953,8 +1002,8 @@ export default {
   border-radius: 0.75rem;
   color: #fff;
   display: block;
-  max-width: 80%;
   margin: 0 auto;
+  max-width: 80%;
   padding: 0.5rem 1rem 0.75rem;
   text-align: center;
 }
@@ -965,10 +1014,11 @@ export default {
   margin: 1rem 0 0;
 }
 .file-upload__add-confirm {
+  align-items: stretch;
+  column-gap: 0.5rem;
   display: flex;
   justify-content: flex-end;
   /* justify-content: space-between; */
-  column-gap: 2rem;
 }
 .file-upload__carousel__wrap {
   position: relative;
@@ -988,10 +1038,10 @@ export default {
   padding: 0;
   /* transform: translateX(2.5rem); */
   /* border: 0.05rem solid #000; */
-  white-space: nowrap;
-  transition: transform ease-in-out 0.3s;
-  width: calc(100% * var(--carousel-items));
   transform: translateX(calc(var(--carousel-pos) * calc(-100% / var(--carousel-items))));
+  transition: transform ease-in-out 0.3s;
+  white-space: nowrap;
+  width: calc(100% * var(--carousel-items));
 }
 
 .file-upload__carousel li {
@@ -1051,36 +1101,63 @@ export default {
   background-color: #000;
   border-radius: 0.5rem;
   color: #fff;
+  margin-left: 0.5rem;
   padding: 0.6em 1.2em;
   text-align: center;
 }
+.file-upload__add-btn:focus-within {
+  outline: 0.2rem solid #00b;
+  /* outline-offset: 0.1rem; */
+}
 .file-upload__bad-list-msg {
-  padding: 1.5rem;
   background-color: #c00;
+  border-radius: 1rem;
   color: #fff;
   font-weight: bold;
-  border-radius: 1rem;
+  padding: 1.5rem;
 }
 
 @media screen and (min-width: 30rem) {
   .file-upload__dialogue {
-    max-width: calc(100% - 15rem);
-    max-height: calc(100% - 15rem);
+    max-width: calc(100% - 8rem);
   }
   .file-upload__dialogue > main::before,
   .file-upload__dialogue > main::after {
     width: 8rem;
   }
   .file-upload__carousel__outer {
-    left: calc(var(--carousel-offset) - 16.5rem);
+    left: calc(var(--carousel-offset) - 13rem);
   }
   .file-upload__carousel {
-    --carousel-steps: calc(-100% / var(--carousel-items));
+    /* --carousel-steps: calc(-100% / var(--carousel-items)); */
     width: calc(22rem * var(--carousel-items));
     /* transform: translateX(calc(calc(var(--carousel-pos) * var(--carousel-steps)) + calc(var(--carousel-steps) / -1.6))); */
   }
   .file-upload__carousel li {
     width: 22rem;
+  }
+}
+
+@media screen and (min-width: 40rem) {
+  .file-upload__dialogue {
+    max-width: calc(100% - 15rem);
+  }
+  .file-upload__carousel__outer {
+    left: calc(var(--carousel-offset) - 16.5rem);
+  }
+  .file-upload__carousel {
+    /* --carousel-steps: calc(-100% / var(--carousel-items)); */
+    width: calc(22rem * var(--carousel-items));
+    /* transform: translateX(calc(calc(var(--carousel-pos) * var(--carousel-steps)) + calc(var(--carousel-steps) / -1.6))); */
+  }
+  .file-upload__carousel li {
+    width: 22rem;
+  }
+}
+
+@media screen and (min-width: 50rem) {
+  .file-upload__dialogue {
+    max-height: calc(100% - 15rem);
   }
 }
 

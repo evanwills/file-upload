@@ -231,7 +231,11 @@ export default {
       <p v-if="isBadType === true" class="file-upload-img__bad-msg">You cannot upload a <code>.{{ ext }}</code> type file. Please delete or replace it.</p>
       <p v-if="isSurplus === true" class="file-upload-img__bad-msg">There are already too many files in the list. Either move this file up the list or delete it.</p>
     </figcaption>
-    <img v-if="fileSrc !== ''" :src="fileSrc" :alt="alt" />
+
+    <span v-if="fileSrc !== ''" class="file-upload-img__img">
+      <img :src="fileSrc" :alt="alt" />
+    </span>
+
     <div v-else :class="getPlaceholderClass()">
       <span>{{ ext }}</span>
       <span v-html="_fileName"></span>
@@ -253,22 +257,82 @@ export default {
 .file-upload-img {
   box-sizing: border-box;
   display: flex;
-  margin: 0;
-  overflow-y: auto;
-  padding: 0;
-  position: relative;
   flex-direction: column;
   height: 100%;
+  margin: 0;
+  overflow-y: auto;
+  padding: 1rem;
+  position: relative;
+}
+.file-upload-img::before {
+  border: 0.1rem solid #ccc;
+  bottom: 1rem;
+  content: '';
+  left: 1rem;
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
 }
 .file-upload-img--bad {
   padding: 0 0 2rem;
 }
-.file-upload-img > img {
+.file-upload-img--bad::before {
+  border-color: #c00;
+}
+.file-upload-img__img {
   display: block;
   height: auto;
   margin: 0 auto;
+  position: relative;
   text-align: center;
+  width: calc(100% - 2rem);
+}
+.file-upload-img--bad .file-upload-img__img {
+  z-index: 1;
+}
+.file-upload-img--bad .file-upload-img__img::after {
+  background-color: rgba(255, 0, 0, 0.7);
+  bottom: 0;
+  content: '';
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
   width: 100%;
+  z-index: 2;
+}
+.file-upload-img--bad .file-upload-img__img::before {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: bold;
+  left: 50%;
+  max-width: 100%;
+  padding: 1rem;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+}
+.file-upload-img__img--too-big::before {
+  content: 'File size is too large';
+}
+.file-upload-img__img--bad-type::before {
+  content: 'Bad file type';
+}
+.file-upload-img__img--surplus::before {
+  content: 'File is over upload limit';
+}
+.file-upload-img__img--bad-type.file-upload-img__img--too-big::before {
+  content: 'Bad file type and is too large';
+}
+.file-upload-img__img--bad-type.file-upload-img__img--surplus::before {
+  content: 'Bad file type and is over upload limit';
+}
+.file-upload-img__img--too-big.file-upload-img__img--surplus::before {
+  content: 'File size is too large and is over upload limit';
+}
+.file-upload-img__img--bad-type.file-upload-img__img--too-big.file-upload-img__img--surplus::before {
+  content: 'Bad file type, is too large and is over upload limit';
 }
 .file-upload-img__btn-block {
   bottom: 0;
@@ -291,18 +355,6 @@ export default {
 }
 .file-upload-img__btn-block--show {
   opacity: 1;
-}
-.file-upload-img__bad img {
-  position: relative;
-}
-.file-upload-img__bad img::after {
-  position: absolute;
-  content: '';
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 0, 0, 0.8);
 }
 .file-upload-img__replace {
   background-color: #000;
@@ -342,33 +394,59 @@ export default {
 }
 .file-upload-img__bad-msg {
   background-color: #c00;
-  color: #fff;
-  padding: 1rem 1.25rem;
   border-radius: 1rem;
-  margin: 0 2rem 0.5rem;
-  white-space: normal;
+  color: #fff;
   max-width: 20rem;
+  margin: 0 2rem 0.5rem;
+  padding: 1rem 1.25rem;
+  white-space: normal;
 }
 .file-upload-img__pos {
-  position: absolute;
-  text-align: center;
-  width: 1.6rem;
-  height: 1.6rem;
   background-color: #009;
+  border: 0.15rem solid #fff;
   border-radius: 50%;
   color: #fff;
-  top: 0rem;
-  left: 0rem;
   font-size: 0.8rem;
+  height: 1.6rem;
+  left: 0rem;
   line-height: 1.4rem;
-  border: 0.15rem solid #fff;
+  position: absolute;
+  text-align: center;
+  top: 0rem;
+  width: 1.6rem;
 }
 
 @media screen and (min-width: 30rem) {
   .file-upload-img > img {
     height: auto;
-    max-height: 20rem;
-    max-width: 20rem;
+    max-height: 18rem;
+    max-width: 18rem;
+    width: auto;
+  }
+  .file-upload-img__placeholder > span:first-child {
+    font-size: 2rem;
+    padding: 7rem 1rem 4rem;
+  }
+}
+
+@media screen and (min-height: 40rem) {
+  .file-upload-img > img {
+    height: auto;
+    max-height: 14rem;
+    max-width: 14rem;
+    width: auto;
+  }
+  .file-upload-img__placeholder > span:first-child {
+    font-size: 2rem;
+    padding: 5rem 1rem 2rem;
+  }
+}
+
+@media screen and (min-height: 50rem) {
+  .file-upload-img > img {
+    height: auto;
+    max-height: 18rem;
+    max-width: 18rem;
     width: auto;
   }
   .file-upload-img__placeholder > span:first-child {
