@@ -1,6 +1,6 @@
 <script lang="ts">
 import { fileData, fileUploadState, replaceData } from './FileUpload.d';
-import { defaultTypes, getAllowedTypes, getFieldID, getFileExt, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
+import { defaultTypes, getAllowedTypes, getFieldID, getFileExt, isBadType, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
 import  ImageBlobReduce from 'image-blob-reduce';
 import FileUploadImage from './FileUploadImage.vue';
 // import  ImageBlobReduce from '@types/image-blob-reduce';
@@ -389,7 +389,7 @@ export default {
       this.active = false;
 
       // Send an event to the client
-      this.$emit('confirmupload', files);
+      this.$emit('confirm-upload', files);
     },
 
     /**
@@ -539,7 +539,7 @@ export default {
       //   ext = getFileExt(file);
       // } catch
       const tmp: fileData = {
-        badType: this.accepted.indexOf(file.type) === 0,
+        badType: isBadType(file.type, this.allowedTypes),
         ext: getFileExt(file),
         file: null,
         id: this.getUID(),
@@ -800,7 +800,7 @@ export default {
         <p v-else-if="goodCount > 0 && (uploadList.length > max || badCount > 0)" class="file-upload__bad-list-msg">
           {{ getBadListMsg() }}
         </p>
-        <p v-if="uploadList.length > 0" class="file-upload__add-confirm">
+        <p v-if="uploadList.length > 0 && full === false" class="file-upload__add-confirm">
           <label v-if="full === false" :for="getID('extra-input')" class="file-upload__add-btn">Add another file</label>
           <input v-if="full === false" type="file" class="file-upload__input visually-hidden" :id="getID('extra-input')" :multiple="(max > 1 && (max - uploadList.length) > 1) ? true : false" :accept="accepted" v-on:change="processSelectedFiles" />
           <button v-if="goodCount > 0 && uploadList.length <= max" v-on:click="handleConfirm" class="file-upload__confirm--btn">Confirm and upload</button>
@@ -917,7 +917,7 @@ export default {
   transform: rotate(180deg);
 }
 .file-upload__dialogue > footer {
-  padding: 0 1rem 2rem 2rem;
+  padding: 0 1rem 1rem 1rem;
 }
 .file-upload__main-close {
   background-color: #fff;
@@ -966,9 +966,9 @@ export default {
 }
 .file-upload__add-confirm {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   /* justify-content: space-between; */
-  column-gap: 2rem;
+  column-gap: 0.5rem;
 }
 .file-upload__carousel__wrap {
   position: relative;
@@ -1071,6 +1071,12 @@ export default {
   .file-upload__dialogue > main::after {
     width: 8rem;
   }
+  .file-upload__dialogue > footer {
+    padding: 0 2rem 2rem 2rem;
+  }
+  .file-upload__add-confirm {
+    column-gap: 2rem;
+  }
   .file-upload__carousel__outer {
     left: calc(var(--carousel-offset) - 16.5rem);
   }
@@ -1081,6 +1087,12 @@ export default {
   }
   .file-upload__carousel li {
     width: 22rem;
+  }
+}
+
+@media screen and (min-width: 40rem) {
+  .file-upload__add-confirm {
+    justify-content: flex-end;
   }
 }
 

@@ -266,9 +266,17 @@ export default {
 .file-upload-img > img {
   display: block;
   height: auto;
+  max-width: calc(100% - 2rem);
   margin: 0 auto;
   text-align: center;
-  width: 100%;
+  width: auto;
+}
+.file-upload-img > figcaption {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
 }
 .file-upload-img__btn-block {
   bottom: 0;
@@ -341,7 +349,7 @@ export default {
   margin: 0 auto;
 }
 .file-upload-img__bad-msg {
-  background-color: #c00;
+  background-color: rgba(185, 0, 0, 0.7);
   color: #fff;
   padding: 1rem 1.25rem;
   border-radius: 1rem;

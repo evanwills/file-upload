@@ -21,8 +21,11 @@ export const getAllowedTypes = (types: string) : mimeType[] => {
   const good : string[] = [];
   const output : mimeType[] = [];
   const bad : string[] = [];
+  // console.group('getAllowedTypes()')
+  // console.log('types:', types);
 
   const typeList = types.replace(/[\t\n\r\s :;|,]+/g, ' ').trim().split(' ');
+  // console.log('typeList:', typeList)
 
   if (typeList.length > 0) {
     for (let a = 0; a < typeList.length; a += 1) {
@@ -39,15 +42,23 @@ export const getAllowedTypes = (types: string) : mimeType[] => {
         }
       }
     }
+
+    // console.log('output:', output)
+    // console.log('good:', good)
+    // console.log('bad:', bad)
+
     if (good.length === 0) {
       console.error(
         'Bad file mime types specified in <file-upload> component: "' + bad.join('", "') + '"'
       );
+      // console.groupEnd()
       return defaultTypes;
     } else {
+      // console.groupEnd()
       return output;
     }
   } else {
+    // console.groupEnd()
     return defaultTypes;
   }
 };
@@ -113,6 +124,23 @@ export const humanFileSizeToBytes = (humanSize: string) : number => {
 
 export const humanImplode = (input : string[], last : string = 'or') : string => {
   return input.join(', ').replace(/, (?=[^,]+$)/i, ` ${last} `);
+}
+
+/**
+ * Check whether a file has a bad MIME type (and so cannot be uploaded)
+ *
+ * @param type         Mime type of file being tested
+ * @param allowedTypes List of allowed mime types
+ *
+ * @returns FALSE if file can be uploaded. TRUE otherwise
+ */
+export const isBadType = (type : string, allowedTypes : mimeType[]) : boolean => {
+  for (let a = 0; a < allowedTypes.length; a += 1) {
+    if (allowedTypes[a].mime === type) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
