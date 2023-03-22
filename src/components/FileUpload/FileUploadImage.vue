@@ -186,7 +186,7 @@ export default {
     getPlaceholderClass: function () : string {
       const tmp = 'file-upload-img__placeholder';
 
-      return (this.isReady)
+      return (this.isReady === false)
         ? `${tmp} ${tmp}--processing`
         : tmp;
     }
@@ -237,7 +237,7 @@ export default {
     </span>
 
     <div v-else :class="getPlaceholderClass()">
-      <span>{{ ext }}</span>
+      <span><span>{{ ext }}</span></span>
       <span v-html="_fileName"></span>
     </div>
     <span v-if="isReady || isBad" :class="getBtnBlockClass()">
@@ -264,7 +264,7 @@ export default {
   padding: 1rem;
   position: relative;
 }
-.file-upload-img::before {
+/* .file-upload-img::before {
   border: 0.1rem solid #ccc;
   bottom: 1rem;
   content: '';
@@ -272,7 +272,7 @@ export default {
   position: absolute;
   right: 1rem;
   top: 1rem;
-}
+} */
 .file-upload-img--bad {
   padding: 0 0 2rem;
 }
@@ -280,6 +280,15 @@ export default {
   border-color: #c00;
 }
 .file-upload-img__img {
+  display: block;
+  height: auto;
+  max-width: calc(100% - 2rem);
+  margin: 0 auto;
+  position: relative;
+  text-align: center;
+  width: auto;
+}
+.file-upload-img__img > img {
   display: block;
   height: auto;
   max-width: calc(100% - 2rem);
@@ -335,23 +344,38 @@ export default {
   order: 1;
 }
 .file-upload-img__placeholder {
+  align-items: stretch;
   background-color: #eee;
   border: 0.3rem solid #aaa;
   border-radius: 0.5rem;
   color: #888;
+  display: flex;
+  flex-direction: column;
   font-family: 'Courier New', Courier, monospace;
+  height: 100%;
   margin: 0 auto;
+  max-height: 10rem;
   padding-bottom: 1rem;
   text-align: center;
   width: 80%;
   white-space: normal;
 }
 .file-upload-img__placeholder > span:first-child  {
-  display: block;
+  align-self: center;
+  /* display: block; */
+  flex-grow: 1;
   font-size: 1.5rem;
   font-weight: bold;
-  padding: 5rem 0.5rem 2rem;
   margin: 0 auto;
+  padding: 0.5rem;
+  position: relative;
+}
+.file-upload-img__placeholder > span:first-child > span  {
+  display: block;
+  position: relative;
+  top: 50%;
+  /* left: 50%; */
+  transform: translateY(-50%);
 }
 .file-upload-img__bad-msg {
   background-color: rgba(185, 0, 0, 0.7);
@@ -384,9 +408,12 @@ export default {
     max-width: 18rem;
     width: auto;
   }
+  .file-upload-img__placeholder {
+    max-height: 20rem;
+  }
   .file-upload-img__placeholder > span:first-child {
     font-size: 2rem;
-    padding: 7rem 1rem 4rem;
+    /* padding: 7rem 1rem 4rem; */
   }
 }
 
@@ -399,7 +426,7 @@ export default {
   }
   .file-upload-img__placeholder > span:first-child {
     font-size: 2rem;
-    padding: 5rem 1rem 2rem;
+    /* padding: 5rem 1rem 2rem; */
   }
 }
 
@@ -412,7 +439,7 @@ export default {
   }
   .file-upload-img__placeholder > span:first-child {
     font-size: 2rem;
-    padding: 7rem 1rem 4rem;
+    /* padding: 7rem 1rem 4rem; */
   }
 }
 </style>

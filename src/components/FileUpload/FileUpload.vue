@@ -98,7 +98,11 @@ export default {
      *
      * @property {string}
      */
-    types: { type: String, required: false, default: 'png jpg webp pdf docx doc' },
+    types: {
+      type: String,
+      required: false,
+      default: 'png jpg webp pdf docx doc'
+    },
   },
 
   data: function (): fileUploadState {
@@ -288,7 +292,10 @@ export default {
     },
 
     /**
+     * Get message to report on bad files if there are issues with
+     * one or more files.
      *
+     * @returns Message if there are issues. Empty string otherwise.
      */
     getBadListMsg: function () : string {
       const excess = this.goodCount - this.max;
@@ -819,7 +826,7 @@ export default {
         </button>
       </main>
       <footer>
-        <p v-if="uploadList.length === 0">
+        <p v-if="uploadList.length === 0" class="file-upload__first-label">
           <label :for="getID('main-input')"
                   class="file-upload__label">
             {{ uploadHelp }}
@@ -833,7 +840,7 @@ export default {
            class="file-upload__bad-list-msg">
           {{ getBadListMsg() }}
         </p>
-        <p v-if="uploadList.length > 0 && full === false" class="file-upload__add-confirm">
+        <p v-if="uploadList.length > 0 && full === false && badCount === 0" class="file-upload__add-confirm">
           <label v-if="full === false"
                 :for="getID('extra-input')"
                 class="file-upload__add-btn">
@@ -1010,16 +1017,19 @@ export default {
 .file-upload__input {
   display: block;
 }
-.file-upload footer > p {
+.file-upload__first-label {
+  display: block;
   margin: 1rem 0 0;
+  width: 100%;
 }
 .file-upload__add-confirm {
   align-items: stretch;
   column-gap: 0.5rem;
   display: flex;
   justify-content: space-between;
-  /* justify-content: space-between; */
-  column-gap: 0.5rem;
+  /* justify-content: flex-end; */
+  margin: 0;
+  width: 100%;
 }
 .file-upload__carousel__wrap {
   position: relative;
