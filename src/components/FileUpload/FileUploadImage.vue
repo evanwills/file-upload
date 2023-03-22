@@ -242,13 +242,32 @@ export default {
     </div>
     <span v-if="isReady || isBad" :class="getBtnBlockClass()">
       <button v-if="canMove === true && isBad === false && pos > 0"
-        v-on:click="moveLeftClick" class="file-upload-img__left" :tabindex="(isFocused === false) ? -1 : undefined">Move left</button>
-      <button v-if="canMove === true && isBad === false && pos < (total - 1)" v-on:click="moveRightClick" class="file-upload-img__right" :tabindex="(isFocused === false) ? -1 : undefined">Move right</button>
-      <label v-if="isSurplus === false" class="file-upload-img__replace">
-        Replace
-        <input type="file" class="visually-hidden" :id="getID('extra-input')" :accept="accepted" v-on:change="replaceClick" :tabindex="(isFocused === false) ? -1 : undefined" />
+              v-on:click="moveLeftClick"
+              class="file-upload-img__btn file-upload-img__btn--move file-upload-img__btn--left"
+              :tabindex="(isFocused === false) ? -1 : undefined">
+        <span class="visually-hidden">Move left</span>
+      </button>
+      <button v-if="canMove === true && isBad === false && pos < (total - 1)"
+              v-on:click="moveRightClick"
+              class="file-upload-img__btn file-upload-img__btn--move file-upload-img__btn--right"
+              :tabindex="(isFocused === false) ? -1 : undefined">
+        <span class="visually-hidden">Move right</span>
+      </button>
+      <label v-if="isSurplus === false" class="file-upload-img__btn file-upload-img__btn--replace">
+        <span class="visually-hidden">Replace</span>
+        <input type="file"
+               class="visually-hidden"
+               :id="getID('extra-input')"
+               :accept="accepted"
+               v-on:change="replaceClick"
+               :tabindex="(isFocused === false) ? -1 : undefined" />
       </label>
-      <button v-if="total > 1 || isBad" v-on:click="deleteClick" class="file-upload-img__delete" :tabindex="(isFocused === false) ? -1 : undefined">Delete</button>
+      <button v-if="total > 1 || isBad"
+              v-on:click="deleteClick"
+              class="file-upload-img__btn file-upload-img__btn--delete"
+              :tabindex="(isFocused === false) ? -1 : undefined">
+        <span class="visually-hidden">Delete</span>
+      </button>
     </span>
   </figure>
 </template>
@@ -280,18 +299,19 @@ export default {
   border-color: #c00;
 }
 .file-upload-img__img {
-  display: block;
-  height: auto;
-  max-width: calc(100% - 2rem);
-  margin: 0 auto;
+  /* display: block; */
+  /* height: auto; */
+  /* max-width: calc(100% - 2rem); */
+  /* margin: 0 auto; */
   position: relative;
-  text-align: center;
-  width: auto;
+  /* text-align: center; */
+  /* width: auto; */
 }
 .file-upload-img__img > img {
   display: block;
   height: auto;
-  max-width: calc(100% - 2rem);
+  /* max-width: calc(100% - 2rem); */
+  max-width: 100%;
   margin: 0 auto;
   position: relative;
   text-align: center;
@@ -311,7 +331,7 @@ export default {
   display: flex;
   /* display: block; */
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-between;
   /* left: 50%; */
   opacity: 0;
   padding: 0.5rem 0;
@@ -326,28 +346,67 @@ export default {
 .file-upload-img__btn-block--show {
   opacity: 1;
 }
-.file-upload-img__replace {
-  background-color: #000;
-  border-radius: 0.5rem;
+.file-upload-img__btn {
+  border-radius: 0;
+  flex-grow: 1;
+  padding: 0.6rem;
+  text-align: center;
+  /* width: 3rem; */
+  position: relative;
+  height: 3rem;
+}
+.file-upload-img__btn::before {
+  position: absolute;
+  font-size: 1.5rem;
+  line-height: 0.9rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+}
+.file-upload-img__btn--delete {
+  background-color: #c00;
   color: #fff;
-  padding: 0.6em 1.2em;
+}
+.file-upload-img__btn--delete::before {
+  content: '\00425';
+}
+.file-upload-img__btn--replace {
+  background-color: #00b;
+  /* border-radius: 0.5rem; */
+  color: #fff;
+  padding: 0 0.6rem;
   order: -1;
 }
-.file-upload-img__replace:focus-within {
+.file-upload-img__btn--replace::before {
+  content: '\021BB';
+  font-size: 2rem;
+  line-height: 0.9rem;
+  transform: translate(-50%, -75%);
+}
+.file-upload-img__btn--replace:focus-within {
   outline: 0.2rem solid #00b;
   /* outline-offset: 0.1rem; */
 }
-.file-upload-img__left {
+.file-upload-img__btn--left {
   order: -2;
 }
-.file-upload-img__right {
+.file-upload-img__btn--left::before {
+  content: '\021D0';
+}
+.file-upload-img__btn--right {
   order: 1;
+}
+.file-upload-img__btn--right::before {
+  content: '\021D2';
+}
+.file-upload-img__btn--move::before {
+  transform: translate(-50%, -65%);
 }
 .file-upload-img__placeholder {
   align-items: stretch;
   background-color: #eee;
   border: 0.3rem solid #aaa;
-  border-radius: 0.5rem;
+  /* border-radius: 0.5rem; */
   color: #888;
   display: flex;
   flex-direction: column;
@@ -380,7 +439,7 @@ export default {
 .file-upload-img__bad-msg {
   background-color: rgba(185, 0, 0, 0.7);
   color: #fff;
-  border-radius: 1rem;
+  /* border-radius: 1rem; */
   max-width: 20rem;
   margin: 0 2rem 0.5rem;
   padding: 1rem 1.25rem;
@@ -399,6 +458,7 @@ export default {
   text-align: center;
   top: 0rem;
   width: 1.6rem;
+  z-index: 1;
 }
 
 @media screen and (min-width: 30rem) {

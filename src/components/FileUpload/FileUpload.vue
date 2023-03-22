@@ -1155,11 +1155,66 @@ export default {
   .file-upload__carousel li {
     width: 22rem;
   }
+  .file-upload__carousel_btn {
+    border: none;
+    border-radius: 0;
+    bottom: 0;
+    height: 100%;
+    top: 0;
+    transform: none;
+    width: calc(calc(100% - 22rem) / 2);
+  }
+  .file-upload__carousel_btn:hover,
+  .file-upload__carousel_btn:focus {
+    outline: none;
+    border: none;
+  }
+  .file-upload__carousel_btn::before{
+    position: absolute;
+    top: 50%;
+    outline: 0.1rem solid #55f;
+    content: '';
+    width: 2.5rem;
+    height: 2.5rem;
+    transform: translateY(-0.5rem);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity ease-in-out 0.3s;
+  }
+  .file-upload__carousel_btn:hover::before,
+  .file-upload__carousel_btn:focus::before {
+    opacity: 1;
+    transition: opacity ease-in-out 0.3s;
+  }
+  .file-upload__carousel_btn::after{
+    position: absolute;
+    top: 50%;
+  }
+  .file-upload__carousel_btn--previous::after{
+    left: 0.75rem;
+    right: auto;
+  }
+  .file-upload__carousel_btn--next::after{
+    left: auto;
+    right: 0.75rem;
+  }
+  .file-upload__carousel_btn--previous::before{
+    left: 0rem;
+    right: auto;
+  }
+  .file-upload__carousel_btn--next::before{
+    left: auto;
+    right: 0rem;
+  }
 }
 
 @media screen and (min-width: 40rem) {
   .file-upload__add-confirm {
     justify-content: flex-end;
+  }
+  .file-upload__dialogue > main::before,
+  .file-upload__dialogue > main::after {
+    width: 8rem;
   }
 }
 
