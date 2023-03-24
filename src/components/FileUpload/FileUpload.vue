@@ -373,7 +373,7 @@ export default {
      * @returns Inline CSS for styling carousel
      */
     getCarouselOffset: function () : string {
-      return `--carousel-offset: calc(${this.carouselOffset}px - 2rem);`;
+      return `--carousel-offset: calc(${this.carouselOffset}px - 2.75rem);`;
     },
 
     /**
@@ -986,6 +986,7 @@ export default {
 }
 
 .file-upload__dialogue {
+  --file-upload-item-width: 10rem;
   align-content: stretch;
   background-color: #fff;
   border-radius: 0.25rem;
@@ -1012,42 +1013,12 @@ export default {
   transition: transform ease-in-out 0.3s 0.2s, opacity ease-in-out 0.3s 0.2s;
 }
 .file-upload__dialogue--some {
-  height: calc(100% - 4rem);
+  max-height: calc(100% - 4rem);
   /* overflow: hidden; */
   width: calc(100% - 4rem);
 }
 .file-upload__dialogue > header {
   padding: 2rem 2rem 1rem 2rem;
-}
-.file-upload__dialogue > main {
-  align-items: stretch;
-  /* background-color: #009; */
-  /* display: flex; */
-  flex-grow: 1;
-  overflow: hidden auto;
-  position: relative;
-}
-.file-upload__dialogue > main::before,
-.file-upload__dialogue > main::after {
-  background: linear-gradient(
-    90deg,
-    rgba(255,255,255,1) 0%,
-    rgba(255,255,255,0) 100%
-  );
-  bottom: 0;
-  content: '';
-  display: block;
-  position: absolute;
-  top: 0;
-  width: 3rem;
-  z-index: 10000;
-}
-.file-upload__dialogue > main::before {
-  left: 0;
-}
-.file-upload__dialogue > main::after {
-  right: 0;
-  transform: rotate(180deg);
 }
 .file-upload__dialogue > footer {
   display: flex;
@@ -1105,16 +1076,47 @@ export default {
   align-items: stretch;
   column-gap: 0.5rem;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   /* justify-content: flex-end; */
   margin: 0;
+  row-gap: 0.5rem;
   width: 100%;
 }
 .file-upload__carousel__wrap {
+  align-items: stretch;
+  /* background-color: #009; */
+  /* display: flex; */
+  flex-grow: 1;
+  max-height: calc(100% - 4rem);
+  overflow: hidden auto;
   position: relative;
+}
+.file-upload__carousel__wrap::before,
+.file-upload__carousel__wrap::after {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,0) 100%
+  );
+  bottom: 0;
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  width: 3rem;
+  z-index: 10000;
+}
+.file-upload__carousel__wrap::before {
+  left: 0;
+}
+.file-upload__carousel__wrap::after {
+  right: 0;
+  transform: rotate(180deg);
 }
 .file-upload__carousel__outer {
   position: relative;
+  height: 100%;
 }
 .file-upload__carousel {
   align-content: stretch;
@@ -1123,6 +1125,8 @@ export default {
   /* column-gap: 2rem; */
   display: flex;
   flex-wrap: nowrap;
+  justify-content: stretch;
+  height: 100%;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1134,7 +1138,7 @@ export default {
   width: calc(100% * var(--carousel-items));
 }
 
-.file-upload__carousel li {
+.file-upload__carousel__item {
   /* align-content: stretch; */
   /* align-items: center; */
   box-sizing: border-box;
@@ -1142,7 +1146,9 @@ export default {
   display: flex;
   /* display: inline-block; */
   flex-direction: column;
-  /* flex-grow: 1; */
+  flex-grow: 1;
+  /* height: 100%; */
+
   padding: 0 1rem;
   margin: 0;
   width: 70%;
@@ -1169,7 +1175,7 @@ export default {
   top: 0;
   left: 0;
   content: '';
-  border: 0.3rem solid #090;
+  border: 0.3rem solid #0069d5;
   width: 1rem;
   height: 1rem;
   border-left: none;
@@ -1191,8 +1197,7 @@ export default {
   background-color: #000;
   border-radius: 0.5rem;
   color: #fff;
-  margin-left: 0.5rem;
-  padding: 0.6em 1.2em;
+  padding: 0.4em 1.2em;
   text-align: center;
 }
 .file-upload__add-btn:focus-within {
@@ -1209,33 +1214,80 @@ export default {
   text-align: center;
 }
 
+@media screen and (min-height: 30rem) and (min-width: 24rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 18rem;
+  }
+  .file-upload__carousel__wrap {
+    max-height: 31.5rem;
+  }
+  .file-upload__carousel__item {
+    width: 18rem;
+  }
+}
+@media screen and (min-height: 36rem) and (min-width: 30rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 20rem;
+  }
+  .file-upload__carousel__wrap {
+    max-height: 31.5rem;
+  }
+  .file-upload__carousel__item {
+    width: 20rem;
+  }
+}
+@media screen and (min-height: 42rem) and (min-width: 36rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 23.5rem;
+  }
+  .file-upload__carousel__wrap {
+    max-height: 31.5rem;
+  }
+  .file-upload__carousel__item {
+    width: 23rem;
+  }
+}
+@media screen and (maminx-height: 48rem) and (min-width: 42rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 26rem;
+  }
+  .file-upload__carousel__wrap {
+    max-height: 31.5rem;
+  }
+  .file-upload__carousel__item {
+    width: 26rem;
+  }
+}
+
 @media screen and (min-width: 30rem) {
   .file-upload__dialogue {
     max-width: calc(100% - 8rem);
     /* max-width: calc(100% - 15rem); */
   }
-  .file-upload__dialogue > main::before,
-  .file-upload__dialogue > main::after {
+  .file-upload__carousel__wrap::before,
+  .file-upload__carousel__wrap::after {
     width: 8rem;
   }
   .file-upload__dialogue > footer {
     padding: 0 2rem 2rem 2rem;
   }
   .file-upload__add-confirm {
+    flex-direction: row;
     column-gap: 2rem;
   }
   .file-upload__carousel__outer {
+    height: 100%;
     left: calc(var(--carousel-offset) - 13rem);
     /* left: calc(var(--carousel-offset) - 16.5rem); */
   }
   .file-upload__carousel {
     /* --carousel-steps: calc(-100% / var(--carousel-items)); */
-    width: calc(22rem * var(--carousel-items));
+    width: calc(var(--file-upload-item-width) * var(--carousel-items));
     /* transform: translateX(calc(calc(var(--carousel-pos) * var(--carousel-steps)) + calc(var(--carousel-steps) / -1.6))); */
   }
-  .file-upload__carousel li {
-    width: 22rem;
-  }
+  /* .file-upload__carousel__item {
+    width: 26rem;
+  } */
   .file-upload__carousel_btn {
     border: none;
     border-radius: 0;
@@ -1287,22 +1339,27 @@ export default {
     left: auto;
     right: 0.1rem;
   }
+  .file-upload__add-btn {
+    margin-left: 0.5rem;
+    padding: 0.6em 1.2em;
+  }
 }
 
 @media screen and (min-width: 40rem) {
   .file-upload__add-confirm {
     justify-content: flex-end;
   }
-  .file-upload__dialogue > main::before,
-  .file-upload__dialogue > main::after {
+  .file-upload__carousel__wrap::before,
+  .file-upload__carousel__wrap::after {
     width: 8rem;
   }
 }
 
-@media screen and (min-width: 50rem) {
+/* @media screen and (min-width: 50rem) {
   .file-upload__dialogue {
     max-height: calc(100% - 15rem);
   }
-}
+} */
+
 
 </style>

@@ -196,6 +196,10 @@ export default {
       return (this.isReady === false)
         ? `${tmp} ${tmp}--processing`
         : tmp;
+    },
+
+    makeWrapable: function () : string {
+      return this.fileName.replace(/(?=[^a-z0-9]+)/ig, '\u200B')
     }
   },
 
@@ -233,20 +237,20 @@ export default {
   <figure :class="wrapClass">
     <figcaption :class="(fileSrc !== '') ? 'file-upload-img--img' : 'file-upload-img--file'">
       <span  class="file-upload-img__pos">{{ (pos + 1) }}</span>
-      <span class="visually-hidden">{{ fileName }}</span>
+      <span class="file-upload-img__file-name" v-html="_fileName"></span>
       <p v-if="isTooBig === true" class="file-upload-img__bad">This file is too large to be uploaded. Please replace it with a smaller version or delete it from the upload list</p>
       <p v-if="isBadType === true" class="file-upload-img__bad-msg">You cannot upload a <code>.{{ ext }}</code> type file. Please delete or replace it.</p>
       <p v-if="isSurplus === true" class="file-upload-img__bad-msg">There are already too many files in the list. Either move this file up the list or delete it.</p>
     </figcaption>
 
-    <span v-if="fileSrc !== ''" class="file-upload-img__img">
+    <div v-if="fileSrc !== ''" class="file-upload-img__img">
       <img :src="fileSrc" :alt="alt" :class="isPortrait === true ? 'portrait' : ''" />
-    </span>
-
+    </div>
     <div v-else :class="getPlaceholderClass()">
       <span><span>{{ ext }}</span></span>
       <span v-html="_fileName"></span>
     </div>
+
     <span v-if="isReady || isBad" :class="getBtnBlockClass()">
       <button v-if="canMove === true && isBad === false && pos > 0"
               v-on:click="moveLeftClick"
@@ -281,48 +285,37 @@ export default {
 
 <style>
 .file-upload-img {
+  align-items: center;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex-grow: 1;
+  /* height: 100%; */
   margin: 0;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 1rem 1rem 0.5rem;
   position: relative;
 }
-/* .file-upload-img::before {
-  border: 0.1rem solid #ccc;
-  bottom: 1rem;
-  content: '';
-  left: 1rem;
-  position: absolute;
-  right: 1rem;
-  top: 1rem;
-} */
-/* .file-upload-img--bad {
-  padding: 0 0 2rem;
-} */
 .file-upload-img--bad::before {
   border-color: #c00;
 }
 .file-upload-img__img {
-  /* display: block; */
-  /* height: auto; */
-  /* max-width: calc(100% - 2rem); */
-  /* margin: 0 auto; */
+  flex-grow: 1;
   position: relative;
-  /* text-align: center; */
-  /* width: auto; */
+  order: 2;
+  box-shadow: 0 0 0.75rem rgba(0, 0, 0, 0.2);
 }
 .file-upload-img__img > img {
   display: block;
-  height: auto;
+  height: 100%;
   /* max-width: calc(100% - 2rem); */
-  max-width: 100%;
   margin: 0 auto;
+  max-height: 8rem;
+  max-width: 8rem;
+  object-fit: scale-down;
   position: relative;
   text-align: center;
-  width: auto;
+  width: 100%;
 }
 .file-upload-img > figcaption {
   position: absolute;
@@ -339,16 +332,13 @@ export default {
   box-sizing: border-box;
   column-gap: 1rem;
   display: flex;
-  /* display: block; */
   flex-wrap: wrap;
   justify-content: space-between;
-  /* left: 50%; */
   opacity: 0;
+  order: 1;
   padding: 0.5rem 0;
   row-gap: 0.5rem;
   transition: opacity ease-in-out 0.3s;
-  /* transform: translateX(-50%); */
-  /* position: absolute; */
   white-space: normal;
   text-align: center;
   width: 100%;
@@ -425,9 +415,10 @@ export default {
   height: 100%;
   margin: 1rem auto 0;
   max-height: 10rem;
+  order: 2;
   padding-bottom: 1rem;
   text-align: center;
-  width: 80%;
+  width: 64%;
   white-space: normal;
 }
 .file-upload-img__placeholder > span:first-child  {
@@ -467,33 +458,45 @@ export default {
   line-height: 1.4rem;
   position: absolute;
   text-align: center;
-  top: -0.75rem;
+  top: -0.95rem;
   width: 1.6rem;
   z-index: 1;
 }
+.file-upload-img__file-name {
+  /* background-color: rgba(255, 255, 255, 0.7); */
+  display: block;
+  text-align: center;
+  padding: 0 0.5rem;
+  margin: -1.5rem 0.5rem;
+}
+.file-upload-img--file .file-upload-img__file-name {
+  display: none;
+}
 
 @media screen and (min-width: 30rem) {
-  .file-upload-img > img {
-    height: auto;
+  .file-upload-img__img {
+    order: 1;
+  }
+  .file-upload-img__img > img {
     max-height: 18rem;
-    max-width: 18rem;
-    width: auto;
   }
   .file-upload-img__placeholder {
     max-height: 20rem;
+    order: 1;
   }
   .file-upload-img__placeholder > span:first-child {
     font-size: 2rem;
     /* padding: 7rem 1rem 4rem; */
   }
+  .file-upload-img__btn-block {
+    order: 2;
+  }
 }
 
-@media screen and (min-height: 40rem) {
-  .file-upload-img > img {
-    height: auto;
-    max-height: 14rem;
-    max-width: 14rem;
-    width: auto;
+@media screen and (min-height: 30rem) and (min-width: 30rem) {
+  .file-upload-img__img > img {
+    max-height: 10rem;
+    max-width: 10rem;
   }
   .file-upload-img__placeholder > span:first-child {
     font-size: 2rem;
@@ -501,13 +504,36 @@ export default {
   }
 }
 
-@media screen and (min-height: 50rem) {
-  .file-upload-img > img {
-    height: auto;
+@media screen and (min-height: 36rem) and (min-width: 36rem) {
+  .file-upload-img__img > img {
+    max-height: 14rem;
+    max-width: 14rem;
+  }
+
+  .file-upload-img__placeholder > span:first-child {
+    font-size: 2rem;
+    /* padding: 5rem 1rem 2rem; */
+  }
+}
+
+@media screen and (min-height: 42rem) and (min-width: 42rem) {
+  .file-upload-img__img > img {
     max-height: 18rem;
     max-width: 18rem;
-    width: auto;
   }
+
+  .file-upload-img__placeholder > span:first-child {
+    font-size: 2rem;
+    /* padding: 7rem 1rem 4rem; */
+  }
+}
+
+@media screen and (min-height: 48rem) and (min-width: 48rem) {
+  .file-upload-img__img > img {
+    max-height: 22rem;
+    max-width: 22rem;
+  }
+
   .file-upload-img__placeholder > span:first-child {
     font-size: 2rem;
     /* padding: 7rem 1rem 4rem; */
