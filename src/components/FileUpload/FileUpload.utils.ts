@@ -126,6 +126,16 @@ export const humanImplode = (input : string[], last : string = 'or') : string =>
   return input.join(', ').replace(/, (?=[^,]+$)/i, ` ${last} `);
 }
 
+export const imgIsPortrait = (newImg: File) : Promise<boolean> => {
+  return new Promise((resolve) => {
+    const img = document.createElement("img");
+    img.onloadeddata = () => {
+      resolve(img.height > img.width);
+    }
+    img.src = URL.createObjectURL(newImg);
+  })
+}
+
 /**
  * Check whether a file has a bad MIME type (and so cannot be uploaded)
  *

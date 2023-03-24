@@ -20,10 +20,9 @@ browser before they're sent to the server.
 
 ### `id`
 
-* _required_
-* _{string}_ 
-* No default
-* Variable name: `id`
+|  Required  |    Type    |   Default:   | Variable name |
+|------------|------------|--------------|---------------|
+| _required_ | _{string}_ | _no default_ |     `id`      |
 
 Prepended to the IDs of component's buttons and input fields to make 
 it easy to add accessibility features to those buttons and input 
@@ -34,19 +33,17 @@ before selection is confirmed.
 
 ### `label`
 
-* _required_
-* _{string}_ 
-* No default
-* Variable name: `label`
+|  Required  |    Type    |   Default:   | Variable name |
+|------------|------------|--------------|---------------|
+| _required_ | _{string}_ | _no default_ |    `label`    |
 
 Used as title for the file upload modal block
 
 ### `auto-exclude`
 
-* _optional_ 
-* _{boolean}_
-* Default: `FALSE`
-* Variable name: `autoExclude`
+|  Required  |    Type     | Default | Variable name |
+|------------|-------------|---------|---------------|
+| _optional_ | _{boolean}_ | `FALSE` | `autoExclude` |
 
 Whether or not to auto exclude bad files from the confirmed list of 
 files. By default, the user must conciously remove any bad files 
@@ -56,48 +53,52 @@ disallowed files from the list it sends to the server.
 
 ### `help-txt`
 
-* _optional_ 
-* _{string}_
-* Default: "" (empty)
-* Variable name: `helpTxt`
+|  Required  |    Type    |  Default:  | Variable name |
+|------------|------------|------------|---------------|
+| _optional_ | _{string}_ | "" (empty) |   `helpTxt`   |
 
 Help text to show end user to help them select appropriate files they
 should upload.
 
 ### `max-files`
 
-* _optional_ 
-* _{number}_
-* Default: `1`
-* Variable name: `maxFiles`
+|  Required  |    Type    | Default | Variable name |
+|------------|------------|---------|---------------|
+| _optional_ | _{number}_ |   `1`   |  `maxFiles`   |
 
-Maximum number of valid files a user can upload at one time.
+Maximum number of valid files a user can upload at one time. 
+(Can be any positive integer.)
+
+If `max-files` is set to 0, `max-files` will be forced to 999 
+(effectively unlimited).
+
+> __Note:__ __`max-files` is overridden by `unlimited`.<br />
+>
+> If you want to allow users to upload more than 999 files in one
+> go, do __*NOT*__ use `unlimited`.
 
 ### `min-files`
 
-* _optional_ 
-* _{number}_
-* Default: `1`
-* Variable name: `minFiles`
+|  Required  |    Type    | Default | Variable name |
+|------------|------------|---------|---------------|
+| _optional_ | _{number}_ |   `1`   |  `minFiles`   |
 
 Minimum number of valid files a user must upload at one time.
 
 ### `max-pixels`
 
-* _optional_ 
-* _{number}_
-* Default: `1500`
-* Variable name: `maxPixels`
+|  Required  |    Type    | Default | Variable name |
+|------------|------------|---------|---------------|
+| _optional_ | _{number}_ | `1500`  |  `maxPixels`  |
 
 Maximum number of pixels (in either X or Y dimension) an image
 should be after processing
 
 ### `max-single`
 
-* _optional_ 
-* _{string}_
-* Default: "`5MB`"
-* Variable name: `maxSingle`
+|  Required  |    Type    | Default | Variable name |
+|------------|------------|---------|---------------|
+| _optional_ | _{string}_ | "`5MB`" |  `maxSingle`  |
 
 
 Maximum file size a single file can be
@@ -106,10 +107,9 @@ Maximum file size a single file can be
 
 ### `max-total`
 
-* _optional_ 
-* _{string}_
-* Default: "`15MB`"
-* Variable name: `maxTotal`
+|  Required  |    Type    | Default  | Variable name |
+|------------|------------|----------|---------------|
+| _optional_ | _{string}_ | "`15MB`" |  `maxTotal`   |
 
 Maximum total size a all files user can upload.
 
@@ -117,21 +117,33 @@ Maximum total size a all files user can upload.
 
 ### `reorder`
 
-* _optional_ 
-* _{boolean}_
-* Default: `FALSE`
-* Variable name: `reorder`
+|  Required  |    Type     | Default | Variable name |
+|------------|-------------|---------|---------------|
+| _optional_ | _{boolean}_ | `FALSE` |   `reorder`   |
 
 Whether or not user can reorder files displayed in the file/image carousel
 
 ### `types`
 
-* _optional_ 
-* _{string}_
-* Default: "`png jpg webp pdf docx doc`"
-* Variable name: `types`
+|  Required  |    Type    |            Default            | Variable name |
+|------------|------------|-------------------------------|---------------|
+| _optional_ | _{string}_ | "`png jpg webp pdf docx doc`" |    `types`    |
 
 List of file types (file extensions) the server will accept. (list will be split on white space and/or punctuation)
+
+### `unlimited`
+
+|  Required  |    Type     | Default | Variable name |
+|------------|-------------|---------|---------------|
+| _optional_ | _{boolean}_ | `FALSE` |  `unlimited`  |
+
+Whether or not the user can upload an unlimited number *(999)* of
+files.
+
+> __Note:__ __`unlimited` overrides `max-files`.__ <br />
+>
+> If you want to allow users to upload more than 999 files in one
+> go, do __*NOT*__ use `unlimited`.
 
 ----
 

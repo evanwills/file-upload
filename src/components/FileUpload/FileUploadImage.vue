@@ -46,6 +46,13 @@ export default {
      */
     isFocused: { type: Boolean, required: true },
     /**
+     * Whether or not image in this component has a portrait aspect
+     * ratio.
+     *
+     * @property {boolean} isPortrait
+     */
+    isPortrait: { type: Boolean, required: true },
+    /**
      * Whether or not this file is ready to be rendered
      *
      * @property {boolean} isReady
@@ -224,7 +231,7 @@ export default {
 
 <template>
   <figure :class="wrapClass">
-    <figcaption>
+    <figcaption :class="(fileSrc !== '') ? 'file-upload-img--img' : 'file-upload-img--file'">
       <span  class="file-upload-img__pos">{{ (pos + 1) }}</span>
       <span class="visually-hidden">{{ fileName }}</span>
       <p v-if="isTooBig === true" class="file-upload-img__bad">This file is too large to be uploaded. Please replace it with a smaller version or delete it from the upload list</p>
@@ -233,7 +240,7 @@ export default {
     </figcaption>
 
     <span v-if="fileSrc !== ''" class="file-upload-img__img">
-      <img :src="fileSrc" :alt="alt" />
+      <img :src="fileSrc" :alt="alt" :class="isPortrait === true ? 'portrait' : ''" />
     </span>
 
     <div v-else :class="getPlaceholderClass()">
@@ -292,9 +299,9 @@ export default {
   right: 1rem;
   top: 1rem;
 } */
-.file-upload-img--bad {
+/* .file-upload-img--bad {
   padding: 0 0 2rem;
-}
+} */
 .file-upload-img--bad::before {
   border-color: #c00;
 }
@@ -319,10 +326,13 @@ export default {
 }
 .file-upload-img > figcaption {
   position: absolute;
-  top: 0;
+  top: 1rem;
   left: 0;
   right: 0;
-
+  z-index: 1;
+}
+.file-upload-img--file .file-upload-img__bad-msg {
+  margin: 1.25rem 2.8rem 0;
 }
 .file-upload-img__btn-block {
   bottom: 0;
@@ -369,6 +379,7 @@ export default {
 }
 .file-upload-img__btn--delete::before {
   content: '\00425';
+  transform: translate(-50%, -55%) scaleX(125%);
 }
 .file-upload-img__btn--replace {
   background-color: #00b;
@@ -400,7 +411,7 @@ export default {
   content: '\021D2';
 }
 .file-upload-img__btn--move::before {
-  transform: translate(-50%, -65%);
+  transform: translate(-50%, -65%) scale(125%);
 }
 .file-upload-img__placeholder {
   align-items: stretch;
@@ -412,7 +423,7 @@ export default {
   flex-direction: column;
   font-family: 'Courier New', Courier, monospace;
   height: 100%;
-  margin: 0 auto;
+  margin: 1rem auto 0;
   max-height: 10rem;
   padding-bottom: 1rem;
   text-align: center;
@@ -441,7 +452,7 @@ export default {
   color: #fff;
   /* border-radius: 1rem; */
   max-width: 20rem;
-  margin: 0 2rem 0.5rem;
+  margin: 1rem 2rem 0.5rem;
   padding: 1rem 1.25rem;
   white-space: normal;
 }
@@ -456,7 +467,7 @@ export default {
   line-height: 1.4rem;
   position: absolute;
   text-align: center;
-  top: 0rem;
+  top: -0.75rem;
   width: 1.6rem;
   z-index: 1;
 }

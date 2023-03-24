@@ -46,6 +46,12 @@ export type fileData = {
    */
   originalSize: number,
   /**
+   * Whether or not the (image) file has a portrait aspect ratio
+   *
+   * @property {boolean} ready
+   */
+  isPortrait: boolean,
+  /**
    * Whether or not the file is ready to be uploaded.
    * Will be FALSE while images are being resized
    *

@@ -2,7 +2,7 @@
 import  ImageBlobReduce from 'image-blob-reduce';
 
 import { fileData, fileUploadState, replaceData } from './FileUpload.d';
-import { defaultTypes, getAllowedTypes, getFieldID, getFileExt, isBadType, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
+import { defaultTypes, getAllowedTypes, getFieldID, getFileExt, imgIsPortrait, isBadType, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
 import FileUploadImage from './FileUploadImage.vue';
 // import  ImageBlobReduce from '@types/image-blob-reduce';
 
@@ -46,9 +46,14 @@ export default {
      * Maximum number of files the user can upload at one time
      *
      * * If `maxFiles` is set to zero (0) maximum is unlimited
-     *   (actual limit will be set to: 9999).
+     *   (actual limit will be set to: 999).
      * * If `maxFiles` is negative or cannot be parsed as an integer,
      *   the default (1) will be used
+     *
+     * > __Note:__ __`unlimited` overrides `max-files`.__
+     * >
+     * > If you want to allow users to upload more than 999 files in
+     * one go, do __*NOT*__ use unlimited.
      *
      * @property {number} maxFiles
      */
@@ -103,6 +108,19 @@ export default {
       required: false,
       default: 'png jpg webp pdf docx doc'
     },
+
+    /**
+     * Whether or not the user can upload an unlimited number
+     * *(999)* of files.
+     *
+     * > __Note:__ __`unlimited` overrides `max-files`.__
+     * >
+     * > If you want to allow users to upload more than 999 files in
+     * one go, do __*NOT*__ use unlimited.
+     *
+     * @property {boolean} unlimited
+     */
+    unlimited: { type: Boolean, required: false, default: false },
   },
 
   data: function (): fileUploadState {
@@ -191,16 +209,28 @@ export default {
      * any issues posed by the group of files as a whole.
      */
     checkForIssues: function (forceUpdate: boolean = false): void {
+      /**
+       * Old stores the current state before it gets updated.
+       * This can then be used to compare state after update.
+       * If nothing important has been updated, there will be no
+       * forced rerender. If anything has changed the component
+       * will be forced to update.
+       *
+       * @var old
+       */
       const old = {
         good: this.goodCount,
         bad: this.badCount,
         full: this.full,
         tooBig: this.tooBig,
+        pos: this.focusIndex,
       };
 
       let bad = 0;
       let good = 0;
       let totalBytes = 0;
+      let newPos = -1;
+
       for (let a = 0; a < this.uploadList.length; a += 1) {
         if (this.uploadList[a].badType === false &&
             this.uploadList[a].tooBig === false
@@ -212,13 +242,24 @@ export default {
           totalBytes += this.uploadList[a].size;
         } else {
           bad += 1;
+          if (newPos === -1) {
+            newPos = 0;
+          }
         }
       }
 
       this.goodCount = good;
       this.badCount = bad;
-      this.full = (good >= this.max);
+      this.full = (good > this.max);
       this.tooBig = (totalBytes > this.totalMax);
+
+      if (this.full === true && newPos === -1) {
+        newPos = this.max;
+      }
+
+      if (newPos > -1) {
+        this.focusIndex = newPos;
+      }
 
       this.canConfirm = (
         (this.goodCount > 0 && this.tooBig === false) &&
@@ -229,7 +270,7 @@ export default {
       );
 
       if (forceUpdate === true) {
-        if (old.good !== this.goodCount || old.bad !== this.badCount || old.tooBig !== this.tooBig || old.full !== this.full) {
+        if (old.good !== this.goodCount || old.bad !== this.badCount || old.tooBig !== this.tooBig || old.full !== this.full || old.pos !== this.focusIndex) {
           this.$forceUpdate();
         }
       }
@@ -497,13 +538,13 @@ export default {
      *             including an old version of the file itself)
      * @param file File to be processed then added to the metadata
      */
-    processFileInner: function (data: fileData, file: File) {
+    processFileInner: async function (data: fileData, file: File) {
       if (data.badType === false) {
         if (this.isImage(data.type)) {
           const imgReduce = new ImageBlobReduce();
 
           imgReduce.toBlob(file, { max: 1500 })
-            .then((blob: Blob) => {
+            .then(async (blob: Blob) => {
             // Convert image blob to file object
             const newFile = new File(
             // Blob must be wrapped within array for file object
@@ -513,19 +554,45 @@ export default {
                 lastModified: Date.now(),
             });
 
+            // const isPortrait = imgIsPortrait(newFile);
+
+            // isPortrait.then(() => {
+            //   data.ext = getFileExt(newFile);
+            //   data.file = newFile;
+            //   data.isPortrait =
+            //   data.ready = true;
+            //   data.size = newFile.size;
+            //   data.src = URL.createObjectURL(newFile);
+            //   data.tooBig = newFile.size > this.singleMax;
+
+            //   console.group('processFileInner()')
+            //   console.log('data.size:', data.size)
+            //   console.log('data.isPortrait:', data.isPortrait)
+            //   console.log('newFile.size:', newFile.size)
+            //   console.log('this.singleMax:', this.singleMax)
+            //   console.log('data.tooBig:', data.tooBig)
+            //   console.groupEnd();
+
+            //   this.addFileToList(data);
+            //   this.checkForIssues(true);
+            //   this.$forceUpdate();
+            // });
+
+            data.ext = getFileExt(newFile);
             data.file = newFile;
-            data.src = URL.createObjectURL(newFile);
+            data.isPortrait = true;
             data.ready = true;
             data.size = newFile.size;
+            data.src = URL.createObjectURL(newFile);
             data.tooBig = newFile.size > this.singleMax;
-            data.ext = getFileExt(newFile);
 
-            // console.group('processFileInner()')
-            // console.log('data.size:', data.size)
-            // console.log('newFile.size:', newFile.size)
-            // console.log('this.singleMax:', this.singleMax)
-            // console.log('data.tooBig:', data.tooBig)
-            // console.groupEnd();
+            console.group('processFileInner()')
+            console.log('data.size:', data.size)
+            console.log('data.isPortrait:', data.isPortrait)
+            console.log('newFile.size:', newFile.size)
+            console.log('this.singleMax:', this.singleMax)
+            console.log('data.tooBig:', data.tooBig)
+            console.groupEnd();
 
             this.addFileToList(data);
             this.checkForIssues(true);
@@ -559,6 +626,7 @@ export default {
         lastModified: file.lastModified,
         name: file.name,
         originalSize: file.size,
+        isPortrait: false,
         ready: false,
         reload: false,
         size: file.size,
@@ -708,29 +776,33 @@ export default {
     // --------------------------------------------------------------
     // START: Prepare file input label text
     this.min = parseInt(this.minFiles);
-    this.max = parseInt(this.maxFiles);
+    if (this.unlimited === true) {
+      this.max = 999
+    } else {
+      this.max = parseInt(this.maxFiles);
 
-    if (this.max < 1) {
-      if (this.max === 0) {
-        // User has set max to unlimited
-        // Make max a rediculously high number so it's effectively
-        // unlimited
-        this.max = 9999;
-      } else {
-        this.max = 1;
-        console.error('invalid maxFiles set');
+      if (this.max < 1) {
+        if (this.max === 0) {
+          // User has set max to unlimited
+          // Make max a rediculously high number so it's effectively
+          // unlimited
+          this.max = 999;
+        } else {
+          this.max = 1;
+          console.error('invalid maxFiles set');
+        }
       }
     }
 
-    if (this.min < 1) {
-      this.min = 1;
+    if (this.min < 0) {
+      this.min = 0;
       console.error('invalid minFiles set');
     } else if (this.min > this.max) {
       console.error('invalid minFiles set (minFiles cannot be greater than maxFiles)');
       this.min = this.max;
     }
 
-    if (this.max > 100) {
+    if (this.max > 100 && this.max !== 999) {
       console.warn('unwise value for maxFiles set');
     }
 
@@ -771,7 +843,8 @@ export default {
 <template>
   <div :id="id" class="file-upload">
     <button v-on:click="toggleActive"
-           :tabindex="active ? -1 : undefined">
+           :tabindex="active ? -1 : undefined"
+            class="file-upload__open">
       Upload
       <span class="visually-hidden">{{ genericTypeList }} files</span>
     </button>
@@ -795,7 +868,9 @@ export default {
         </button>
         <div class="file-upload__carousel__outer" :style="getCarouselOffset()">
           <ul class="file-upload__carousel" :style="getCarouselStyle()">
-            <li v-for="(file, index) in uploadList" :key="`file-${file.name}--${file.reload ? 1 : 0}`" class="file-upload__carousel__item">
+            <li v-for="(file, index) in uploadList"
+               :key="`file-${file.name}--${file.reload ? 1 : 0}`"
+                class="file-upload__carousel__item">
               <FileUploadImage :accepted="accepted"
                               :id="getImgID(file.name)"
                               :pos="index"
@@ -807,15 +882,15 @@ export default {
                               :ext="file.ext"
                               :is-bad-type="file.badType"
                               :is-focused="focusIndex === index"
-                              :is-too-big="file.tooBig"
-                              :is-surplus="file.surplus"
+                              :is-portrait="file.isPortrait"
                               :is-ready="file.ready"
+                              :is-surplus="file.surplus"
+                              :is-too-big="file.tooBig"
                               :can-move="reorder"
                               @delete="deleteFile"
                               @replace="replaceFile"
                               @moveleft="moveFileLeft"
                               @moveright="moveFileRight"></FileUploadImage>
-              <!-- <img :src="file.src" :alt="file.name" /> -->
             </li>
           </ul>
         </div>
@@ -840,8 +915,9 @@ export default {
            class="file-upload__bad-list-msg">
           {{ getBadListMsg() }}
         </p>
-        <p v-if="uploadList.length > 0 && full === false && badCount === 0" class="file-upload__add-confirm">
-          <label v-if="full === false"
+        <p v-if="uploadList.length > 0 && full === false && badCount === 0"
+           class="file-upload__add-confirm">
+          <label v-if="goodCount < max"
                 :for="getID('extra-input')"
                 class="file-upload__add-btn">
             Add another file
@@ -886,6 +962,9 @@ export default {
   white-space: nowrap !important;
   width: 1px !important;
 }
+.file-upload__dialogue button, .file-upload__dialogue label {
+  border-radius: 0;
+}
 
 .file-upload__bg-close {
   background-color: rgba(0, 0, 0, 0.75);
@@ -909,7 +988,7 @@ export default {
 .file-upload__dialogue {
   align-content: stretch;
   background-color: #fff;
-  border-radius: 1rem;
+  border-radius: 0.25rem;
   box-shadow: 0.25rem 0.25rem 1rem rgba(255, 255, 150, 0.8);
   box-sizing: border-box;
   color: #000;
@@ -977,8 +1056,8 @@ export default {
 }
 .file-upload__main-close {
   background-color: #fff;
-  border: 0.25rem solid #090;
-  border-radius: 50%;
+  border: 0.1rem solid #009;
+  border-radius: 50% !important;
   color: #000;
   display: inline-block;
   font-size: 0.5rem;
@@ -1122,10 +1201,12 @@ export default {
 }
 .file-upload__bad-list-msg {
   background-color: #c00;
-  border-radius: 1rem;
+  border-radius: 0.25rem;
   color: #fff;
+  flex-grow: 1;
   font-weight: bold;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+  text-align: center;
 }
 
 @media screen and (min-width: 30rem) {
@@ -1191,20 +1272,20 @@ export default {
     top: 50%;
   }
   .file-upload__carousel_btn--previous::after{
-    left: 0.75rem;
+    left: 0.5rem;
     right: auto;
   }
   .file-upload__carousel_btn--next::after{
     left: auto;
-    right: 0.75rem;
+    right: 0.8rem;
   }
   .file-upload__carousel_btn--previous::before{
-    left: 0rem;
+    left: 0.1rem;
     right: auto;
   }
   .file-upload__carousel_btn--next::before{
     left: auto;
-    right: 0rem;
+    right: 0.1rem;
   }
 }
 
