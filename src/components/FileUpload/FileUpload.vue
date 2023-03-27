@@ -98,6 +98,15 @@ export default {
      */
     reorder: { type: Boolean, required: false, default: false },
     /**
+     * Whether or not the selected files are being sent to the server
+     *
+     * Renders a loading spinner while waiting for a response from
+     * the server
+     *
+     * @property {boolean} sending
+     */
+    sending: { type: Boolean, required: false, default: false },
+    /**
      * List of file extensions matching file types the server will
      * accept
      *
@@ -367,14 +376,14 @@ export default {
       return output;
     },
 
-    /**
-     * Get inline carousel styles
-     *
-     * @returns Inline CSS for styling carousel
-     */
-    getCarouselOffset: function () : string {
-      return `--carousel-offset: calc(${this.carouselOffset}px - 2.75rem);`;
-    },
+    // /**
+    //  * Get inline carousel styles
+    //  *
+    //  * @returns Inline CSS for styling carousel
+    //  */
+    // getCarouselOffset: function () : string {
+    //   return `--carousel-offset: calc(${this.carouselOffset}px - 2.75rem);`;
+    // },
 
     /**
      * Get inline carousel styles
@@ -733,14 +742,14 @@ export default {
       }
     },
 
-    updateCarouselOffset: function () {
-      // console.group('updateCarouselOffset()')
-      // console.log('this.carouselOffset (before):', this.carouselOffset)
-      const body = document.getElementsByTagName('body');
-      this.carouselOffset = Math.floor(body[0].clientWidth / 2);
-      // console.log('this.carouselOffset (after):', this.carouselOffset)
-      // console.groupEnd();
-    },
+    // updateCarouselOffset: function () {
+    //   // console.group('updateCarouselOffset()')
+    //   // console.log('this.carouselOffset (before):', this.carouselOffset)
+    //   const body = document.getElementsByTagName('body');
+    //   this.carouselOffset = Math.floor(body[0].clientWidth / 2);
+    //   // console.log('this.carouselOffset (after):', this.carouselOffset)
+    //   // console.groupEnd();
+    // },
   },
 
   mounted: function (): void {
@@ -825,9 +834,9 @@ export default {
     // --------------------------------------------------------------
     // START: Get carousel offset
 
-    this.updateCarouselOffset();
+    // this.updateCarouselOffset();
 
-    window.addEventListener('resize', this.updateCarouselOffset, true);
+    // window.addEventListener('resize', this.updateCarouselOffset, true);
 
     //  END:  Get carousel offset
     // --------------------------------------------------------------
@@ -844,21 +853,24 @@ export default {
   <div :id="id" class="file-upload">
     <button v-on:click="toggleActive"
            :tabindex="active ? -1 : undefined"
+           :disable="sending"
             class="file-upload__open">
       Upload
       <span class="visually-hidden">{{ genericTypeList }} files</span>
     </button>
     <button :class="activeClass('bg-close')"
-             v-on:click="toggleActive" :tabindex="active ? undefined : -1">
+            :tabindex="active ? undefined : -1"
+            :disable="sending"
+             v-on:click="toggleActive" >
       <span class="visually-hidden">
         Close upload {{ genericTypeList }} files
       </span>
     </button>
 
-    <article :class="dialogueClass()">
+    <article v-if="sending === false" :class="dialogueClass()">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
-        <p v-if="helpTxt !== ''">{{ helpTxt }}</p>
+        <p v-if="helpTxt !== ''" class="file-upload__help">{{ helpTxt }}</p>
       </header>
       <main v-if="uploadList.length > 0" class="file-upload__carousel__wrap">
         <button v-if="(uploadList.length > 1)"
@@ -866,7 +878,7 @@ export default {
                 v-on:click="previous">
           <span class="visually-hidden">Previous</span>
         </button>
-        <div class="file-upload__carousel__outer" :style="getCarouselOffset()">
+        <div class="file-upload__carousel__outer">
           <ul class="file-upload__carousel" :style="getCarouselStyle()">
             <li v-for="(file, index) in uploadList"
                :key="`file-${file.name}--${file.reload ? 1 : 0}`"
@@ -943,6 +955,13 @@ export default {
         </span>
       </button>
     </article>
+    <article v-if="sending === true" :class="dialogueClass()">
+      <header>
+        <h2 class="file-upload__head">{{ label }}</h2>
+        <p>Your files are being sent to the server</p>
+
+      </header>
+    </article>
   </div>
 </template>
 
@@ -986,7 +1005,8 @@ export default {
 }
 
 .file-upload__dialogue {
-  --file-upload-item-width: 10rem;
+  --file-upload-item-width: 14rem;
+  --file-upload-img-max: calc(var(--file-upload-item-width) - 4em);
   align-content: stretch;
   background-color: #fff;
   border-radius: 0.25rem;
@@ -1051,8 +1071,13 @@ export default {
   transform: translate(-50%, -50%);
 }
 .file-upload__head {
-  margin: 0 0 1rem;
+  line-height: 1.75rem;
+  margin: 0 0 0.5rem;
   text-align: center;
+}
+.file-upload__help {
+  line-height: 1.25rem;
+  margin: 0.5rem 0;
 }
 .file-upload__label {
   background-color: #009;
@@ -1078,15 +1103,12 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  /* justify-content: flex-end; */
   margin: 0;
   row-gap: 0.5rem;
   width: 100%;
 }
 .file-upload__carousel__wrap {
   align-items: stretch;
-  /* background-color: #009; */
-  /* display: flex; */
   flex-grow: 1;
   max-height: calc(100% - 4rem);
   overflow: hidden auto;
@@ -1117,12 +1139,12 @@ export default {
 .file-upload__carousel__outer {
   position: relative;
   height: 100%;
+  left: calc(50% - calc(var(--file-upload-item-width) / 2));
 }
 .file-upload__carousel {
   align-content: stretch;
   align-items: stretch;
   box-sizing: border-box;
-  /* column-gap: 2rem; */
   display: flex;
   flex-wrap: nowrap;
   justify-content: stretch;
@@ -1130,39 +1152,28 @@ export default {
   list-style: none;
   margin: 0;
   padding: 0;
-  /* transform: translateX(2.5rem); */
-  /* border: 0.05rem solid #000; */
-  transform: translateX(calc(var(--carousel-pos) * calc(-100% / var(--carousel-items))));
+  transform: translateX(calc(-1 * calc(var(--file-upload-item-width) * var(--carousel-pos))));
   transition: transform ease-in-out 0.3s;
   white-space: nowrap;
-  width: calc(100% * var(--carousel-items));
+  width: calc(var(--file-upload-item-width) * var(--carousel-items));
 }
 
 .file-upload__carousel__item {
-  /* align-content: stretch; */
-  /* align-items: center; */
   box-sizing: border-box;
-  /* border: 0.05rem solid #000; */
   display: flex;
-  /* display: inline-block; */
   flex-direction: column;
   flex-grow: 1;
-  /* height: 100%; */
-
   padding: 0 1rem;
   margin: 0;
-  width: 70%;
-  /* max-width: 30rem; */
+  width: var(--file-upload-item-width);
 }
 
 .file-upload__carousel_btn {
   background-color: transparent;
-  /* border: 0.3rem solid #090; */
   border-radius: 50%;
   display: block;
   font-size: 0.5rem;
   height: 1.75rem;
-  /* line-height: 1rem; */
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -1214,55 +1225,58 @@ export default {
   text-align: center;
 }
 
-@media screen and (min-height: 30rem) and (min-width: 24rem) {
+@media screen and (min-height: 26rem) and (min-width: 26rem) {
   .file-upload__dialogue {
-    --file-upload-item-width: 18rem;
-  }
-  .file-upload__carousel__wrap {
-    max-height: 31.5rem;
-  }
-  .file-upload__carousel__item {
-    width: 18rem;
+    --file-upload-item-width: 12rem;
   }
 }
-@media screen and (min-height: 36rem) and (min-width: 30rem) {
+@media screen and (min-height: 30rem) and (min-width: 30rem) {
   .file-upload__dialogue {
-    --file-upload-item-width: 20rem;
-  }
-  .file-upload__carousel__wrap {
-    max-height: 31.5rem;
-  }
-  .file-upload__carousel__item {
-    width: 20rem;
+    --file-upload-item-width: 12rem;
   }
 }
-@media screen and (min-height: 42rem) and (min-width: 36rem) {
+@media screen and (min-height: 34rem) and (min-width: 34rem) {
   .file-upload__dialogue {
-    --file-upload-item-width: 23.5rem;
-  }
-  .file-upload__carousel__wrap {
-    max-height: 31.5rem;
-  }
-  .file-upload__carousel__item {
-    width: 23rem;
+    --file-upload-item-width: 16rem;
   }
 }
-@media screen and (maminx-height: 48rem) and (min-width: 42rem) {
+@media screen and (min-height: 38rem) and (min-width: 38rem) {
   .file-upload__dialogue {
-    --file-upload-item-width: 26rem;
+    --file-upload-item-width: 19rem;
   }
-  .file-upload__carousel__wrap {
-    max-height: 31.5rem;
+}
+@media screen and (min-height: 42rem) and (min-width: 42rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 21rem;
   }
-  .file-upload__carousel__item {
-    width: 26rem;
+}
+@media screen and (min-height: 46rem) and (min-width: 44rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 23rem;
+  }
+}
+@media screen and (min-height: 50rem) and (min-width: 50rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 25rem;
+  }
+}
+@media screen and (min-height: 54rem) and (min-width: 54rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 27rem;
   }
 }
 
 @media screen and (min-width: 30rem) {
   .file-upload__dialogue {
     max-width: calc(100% - 8rem);
-    /* max-width: calc(100% - 15rem); */
+  }
+  .file-upload__head {
+    line-height: 2rem;
+    margin: 0 0 1rem;
+  }
+  .file-upload__help {
+    line-height: 1.5rem;
+    margin: 1rem 0;
   }
   .file-upload__carousel__wrap::before,
   .file-upload__carousel__wrap::after {
@@ -1277,17 +1291,10 @@ export default {
   }
   .file-upload__carousel__outer {
     height: 100%;
-    left: calc(var(--carousel-offset) - 13rem);
-    /* left: calc(var(--carousel-offset) - 16.5rem); */
   }
   .file-upload__carousel {
-    /* --carousel-steps: calc(-100% / var(--carousel-items)); */
     width: calc(var(--file-upload-item-width) * var(--carousel-items));
-    /* transform: translateX(calc(calc(var(--carousel-pos) * var(--carousel-steps)) + calc(var(--carousel-steps) / -1.6))); */
   }
-  /* .file-upload__carousel__item {
-    width: 26rem;
-  } */
   .file-upload__carousel_btn {
     border: none;
     border-radius: 0;
