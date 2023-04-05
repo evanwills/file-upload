@@ -151,6 +151,7 @@ export default {
       nextUID: 0,
       processingCount: 0,
       singleMax: 5242880,
+      shift: false,
       tooBig: false,
       totalMax: 15728640,
       uploadHelp: '',
@@ -239,6 +240,9 @@ export default {
       let good = 0;
       let totalBytes = 0;
       let newPos = -1;
+
+      // reset shift status
+      this.shift = false;
 
       for (let a = 0; a < this.uploadList.length; a += 1) {
         if (this.uploadList[a].badType === false &&
@@ -455,6 +459,43 @@ export default {
       this.$emit('confirm-upload', files);
     },
 
+    handleKeyUp: function (event: KeyboardEvent) : void {
+      const max = (this.uploadList.length - 1);
+      const oldKey = this.focusIndex;
+      let newKey = oldKey;
+
+      switch (event.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          newKey = oldKey + 1;
+          break;
+
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          newKey = oldKey - 1;
+          break;
+
+        case 'Home':
+          newKey = 0;
+          break;
+
+        case 'End':
+          newKey = max;
+          break;
+      }
+
+      if (newKey < 0) {
+        newKey = max;
+      } else if (newKey > max) {
+        newKey = 0;
+      }
+
+      if (oldKey !== newKey) {
+        this.focusIndex = newKey;
+        this.$forceUpdate();
+      }
+    },
+
     /**
      * Check whether or not a file is an image (based on it's
      * declared mime type)
@@ -521,6 +562,7 @@ export default {
         // Wrap focus around to beginning
         this.focusIndex = 0;
       }
+      this.shift = false;
     },
 
     /**
@@ -533,6 +575,7 @@ export default {
         // Wrap focus around to end
         this.focusIndex = (this.uploadList.length - 1);
       }
+      this.shift = false;
     },
 
     /**
@@ -750,6 +793,26 @@ export default {
     //   // console.log('this.carouselOffset (after):', this.carouselOffset)
     //   // console.groupEnd();
     // },
+
+    updateSelected(oldKey: number, newKey: number, max: number) : boolean {
+      if (newKey < 0) {
+        newKey = 0;
+      } else if (newKey > max) {
+        newKey = max;
+      }
+
+      if (oldKey !== newKey) {
+        this.uploadList[oldKey].selected = false;
+        this.uploadList[newKey].selected = true;
+
+        this.selected = this.uploadList[newKey];
+        this.selectedKey = newKey;
+        this.$forceUpdate();
+
+        return true;
+      }
+      return false;
+    },
   },
 
   mounted: function (): void {
@@ -854,6 +917,7 @@ export default {
     <button v-on:click="toggleActive"
            :tabindex="active ? -1 : undefined"
            :disable="sending"
+            accesskey="u"
             class="file-upload__open">
       Upload
       <span class="visually-hidden">{{ genericTypeList }} files</span>
@@ -867,7 +931,8 @@ export default {
       </span>
     </button>
 
-    <article v-if="sending === false" :class="dialogueClass()">
+    <article v-if="sending === false" :class="dialogueClass()"
+            v-on:keyup="handleKeyUp($event)">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
         <p v-if="helpTxt !== ''" class="file-upload__help">{{ helpTxt }}</p>
@@ -875,10 +940,11 @@ export default {
       <main v-if="uploadList.length > 0" class="file-upload__carousel__wrap">
         <button v-if="(uploadList.length > 1)"
                 class="file-upload__carousel_btn file-upload__carousel_btn--previous"
+                accesskey="p"
                 v-on:click="previous">
           <span class="visually-hidden">Previous</span>
         </button>
-        <div class="file-upload__carousel__outer">
+        <div class="file-upload__carousel__outer" v-on:keydown="">
           <ul class="file-upload__carousel" :style="getCarouselStyle()">
             <li v-for="(file, index) in uploadList"
                :key="`file-${file.name}--${file.reload ? 1 : 0}`"
@@ -902,12 +968,14 @@ export default {
                               @delete="deleteFile"
                               @replace="replaceFile"
                               @moveleft="moveFileLeft"
-                              @moveright="moveFileRight"></FileUploadImage>
+                              @moveright="moveFileRight"
+                              v-on:keyup="handleKeyUp($event)"></FileUploadImage>
             </li>
           </ul>
         </div>
         <button v-if="(uploadList.length > 1)"
                 class="file-upload__carousel_btn file-upload__carousel_btn--next"
+                accesskey="n"
                 v-on:click="next">
           <span class="visually-hidden">Next</span>
         </button>
@@ -938,10 +1006,12 @@ export default {
                   :id="getID('extra-input')"
                   :multiple="(max > 1 && (max - uploadList.length) > 1)"
                   :accept="accepted"
+                  accesskey="a"
                   v-on:change="processSelectedFiles" />
           </label>
           <button v-if="canConfirm === true"
                   v-on:click="handleConfirm"
+                  accesskey="s"
                   class="file-upload__confirm--btn">
             Confirm and upload
           </button>

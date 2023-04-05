@@ -171,6 +171,14 @@ export default {
       }
     },
     /**
+     * Handle user releasing a pressed keyboard key
+     *
+     * @param {KeyboardEvent} keyEvent
+     */
+    keyUpEvent: function (keyEvent : KeyboardEvent) : void {
+      this.$emit('keyup', keyEvent)
+    },
+    /**
      * Get a unique ID to user as the value for a label's `for`
      * attribute and an ID for the associated input field.
      *
@@ -234,7 +242,8 @@ export default {
 </script>
 
 <template>
-  <figure :class="wrapClass">
+  <figure :class="wrapClass"
+          v-on:keyup="keyUpEvent($event)">
     <figcaption :class="(fileSrc !== '') ? 'file-upload-img--img' : 'file-upload-img--file'">
       <span  class="file-upload-img__pos">{{ (pos + 1) }}</span>
       <span class="file-upload-img__file-name" v-html="_fileName"></span>
@@ -254,6 +263,7 @@ export default {
     <span v-if="isReady || isBad" :class="getBtnBlockClass()">
       <button v-if="canMove === true && isBad === false && pos > 0"
               v-on:click="moveLeftClick"
+              accesskey="b"
               class="file-upload-img__btn file-upload-img__btn--move file-upload-img__btn--left"
               :tabindex="(isFocused === false) ? -1 : undefined">
         <span class="visually-hidden">Move left</span>
@@ -261,6 +271,7 @@ export default {
       <button v-if="canMove === true && isBad === false && pos < (total - 1)"
               v-on:click="moveRightClick"
               class="file-upload-img__btn file-upload-img__btn--move file-upload-img__btn--right"
+              accesskey="f"
               :tabindex="(isFocused === false) ? -1 : undefined">
         <span class="visually-hidden">Move right</span>
       </button>
@@ -268,6 +279,7 @@ export default {
         <span class="visually-hidden">Replace</span>
         <input type="file"
                class="visually-hidden"
+               accesskey="r"
                :id="getID('extra-input')"
                :accept="accepted"
                v-on:change="replaceClick"
@@ -275,6 +287,7 @@ export default {
       </label>
       <button v-if="total > 1 || isBad"
               v-on:click="deleteClick"
+               accesskey="d"
               class="file-upload-img__btn file-upload-img__btn--delete"
               :tabindex="(isFocused === false) ? -1 : undefined">
         <span class="visually-hidden">Delete</span>

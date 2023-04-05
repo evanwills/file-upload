@@ -207,6 +207,12 @@ export type fileUploadState = {
    */
   uploadList: fileData[],
   /**
+   * Whether or not the keyboard shift key is currently held down.
+   *
+   * @property {boolean} shift
+   */
+  shift: boolean,
+  /**
    * Maximum number of bytes a single file can be
    *
    * @property {number} singleMax
