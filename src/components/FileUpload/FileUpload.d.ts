@@ -282,3 +282,12 @@ export type replaceData = {
   oldName: string,
   newFile: File
 }
+
+
+export type svgData = {
+  errorCount: number,
+  error1a: string,
+  error1b: string,
+  error2a: string,
+  error2b: string
+}

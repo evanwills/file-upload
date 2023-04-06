@@ -1,6 +1,7 @@
 <script lang="ts">
 import { getFieldID } from './FileUpload.utils';
 import { fileUploadImgState } from './FileUpload';
+import FileUploadPlaceholder from './FileUploadPlaceholder.vue';
 
 export default {
   props: {
@@ -258,6 +259,11 @@ export default {
     <div v-else :class="getPlaceholderClass()">
       <span class="file-upload-img__placeholder__ext"><span>{{ ext }}</span></span>
       <span class="file-upload-img__placeholder__name" v-html="_fileName"></span>
+      <FileUploadPlaceholder :loading="!isReady"
+        :is-bad="isBadType"
+        :too-large="isTooBig"
+        :ext="ext"
+        :file-name="fileName" />
     </div>
 
     <span v-if="isReady || isBad" :class="getBtnBlockClass()">
