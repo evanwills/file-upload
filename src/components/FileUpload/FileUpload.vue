@@ -1335,6 +1335,26 @@ export default {
     --file-upload-item-width: 27rem;
   }
 }
+@media screen and (min-height: 58rem) and (min-width: 58rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 29rem;
+  }
+}
+@media screen and (min-height: 62rem) and (min-width: 62rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 31rem;
+  }
+}
+@media screen and (min-height: 66rem) and (min-width: 66rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 33rem;
+  }
+}
+@media screen and (min-height: 70rem) and (min-width: 70rem) {
+  .file-upload__dialogue {
+    --file-upload-item-width: 35rem;
+  }
+}
 
 @media screen and (min-width: 30rem) {
   .file-upload__dialogue {

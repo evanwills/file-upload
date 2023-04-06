@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
 import FileUpload from './components/FileUpload/FileUpload.vue';
 
 function handleUpload (e : Event) {

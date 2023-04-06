@@ -1,5 +1,5 @@
 <template>
-  <svg width="210mm" height="297mm" viewBox="0 0 210 297" version="1.1" xmlns="http://www.w3.org/2000/svg" :class="stateClass">
+  <svg width="16.4rem" viewBox="0 0 210 297" version="1.1" xmlns="http://www.w3.org/2000/svg" :class="stateClass()">
       <g>
         <g class="placeholder-faux-text-block">
           <rect width="120" height="22" x="28" y="28" />
@@ -101,7 +101,7 @@ export default {
 }
 </script>
 
-<style>
+<style >
 svg.file-upload-placeholder g {
   font-family: Verdana, Arial, Helvetica, sans-serif;
 }
@@ -190,14 +190,14 @@ svg.file-upload-placeholder .placeholder-loading-indicator circle {
   fill: #fff;
   stroke: none;
   animation-direction: alternate;
-  animation-duration: 3s;
+  animation-duration: 1s;
   animation-iteration-count: infinite;
   animation-name: placeholde-slide;
   animation-timing-function: ease-in-out;
 }
-svg.file-upload-placeholder .placeholder-loading-indicator circle:nth-of-type(2) { animation-delay: 0.6s; }
-svg.file-upload-placeholder .placeholder-loading-indicator circle:nth-of-type(3) { animation-delay: 1.2s; }
-svg.file-upload-placeholder .placeholder-loading-indicator circle:nth-of-type(4) { animation-delay: 1.8s; }
+svg.file-upload-placeholder .placeholder-loading-indicator circle:nth-of-type(2) { animation-delay: 0.2s; }
+svg.file-upload-placeholder .placeholder-loading-indicator circle:nth-of-type(3) { animation-delay: 0.4s; }
+svg.file-upload-placeholder .placeholder-loading-indicator circle:nth-of-type(4) { animation-delay: 0.6s; }
 svg.file-upload-placeholder .placeholder-loading-indicator text {
   text-transform: uppercase;
   fill: #fff;

@@ -259,6 +259,12 @@ export type mimeList = {
 
 export type mimeType = {
   /**
+   * File Extension
+   *
+   * @property {string} ext
+   */
+  ext: string,
+  /**
    * File mime type
    *
    * @property {string} mime
@@ -275,7 +281,7 @@ export type mimeType = {
    *
    * @property {string} type
    */
-  type: string
+  type: string,
 }
 
 export type replaceData = {

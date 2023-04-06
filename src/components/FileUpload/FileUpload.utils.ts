@@ -66,7 +66,7 @@ export const getAllowedTypes = (types: string) : mimeType[] => {
 export const getFileExt = (file: File) : string => {
   for (const prop in fileTypes) {
     if (file.type === fileTypes[prop].mime) {
-      return fileTypes[prop].name;
+      return fileTypes[prop].ext;
     }
   }
 

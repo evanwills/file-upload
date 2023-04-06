@@ -1,7 +1,8 @@
 <script lang="ts">
 import { getFieldID } from './FileUpload.utils';
 import { fileUploadImgState } from './FileUpload';
-import FileUploadPlaceholder from './FileUploadPlaceholder.vue';
+import FileUploadPlaceholder from './FileUploadPlaceholder.vue'
+// import TmpComponent from './TmpComponent.vue';
 
 export default {
   props: {
@@ -123,6 +124,8 @@ export default {
       _fileName: '',
     }
   },
+
+  components: { FileUploadPlaceholder },
 
   methods: {
     deleteClick: function (e: Event) : void {
@@ -253,13 +256,10 @@ export default {
       <p v-if="isSurplus === true" class="file-upload-img__bad-msg">There are already too many files in the list. Either move this file up the list or delete it.</p>
     </figcaption>
 
-    <div v-if="fileSrc !== ''" class="file-upload-img__img">
-      <img :src="fileSrc" :alt="alt" :class="isPortrait === true ? 'portrait' : ''" />
-    </div>
-    <div v-else :class="getPlaceholderClass()">
-      <span class="file-upload-img__placeholder__ext"><span>{{ ext }}</span></span>
-      <span class="file-upload-img__placeholder__name" v-html="_fileName"></span>
-      <FileUploadPlaceholder :loading="!isReady"
+    <div class="file-upload-img__img">
+      <img v-if="fileSrc !== ''" :src="fileSrc" :alt="alt" :class="isPortrait === true ? 'portrait' : ''" />
+      <FileUploadPlaceholder v-else
+        :loading="!isReady"
         :is-bad="isBadType"
         :too-large="isTooBig"
         :ext="ext"
@@ -325,7 +325,8 @@ export default {
   order: 2;
   box-shadow: 0 0 0.75rem rgba(0, 0, 0, 0.2);
 }
-.file-upload-img__img > img {
+.file-upload-img__img > img,
+.file-upload-img__img > svg {
   display: block;
   height: 100%;
   /* max-width: calc(100% - 2rem); */
@@ -409,6 +410,9 @@ export default {
   outline: 0.2rem solid #00b;
   /* outline-offset: 0.1rem; */
 }
+.file-upload-img__btn--replace:hover {
+  cursor: pointer;
+}
 .file-upload-img__btn--left {
   order: -2;
 }
@@ -425,28 +429,12 @@ export default {
   transform: translate(-50%, -65%) scale(125%);
 }
 .file-upload-img__placeholder {
-  align-items: stretch;
-  background-color: #eee;
-  border: 0.3rem solid #aaa;
-  /* border-radius: 0.5rem; */
-  color: #888;
-  display: flex;
-  flex-direction: column;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.875rem;
-  height: calc(var(--file-upload-img-max) - 1rem);
-  margin: 0 auto;
-  order: 2;
-  overflow-wrap: anywhere;
-  padding-bottom: 1rem;
-  text-align: center;
   width: 72%;
-  white-space: normal;
-  word-break: break-all;
 }
+
+/*
 .file-upload-img__placeholder__ext  {
   align-self: center;
-  /* display: block; */
   flex-grow: 1;
   font-size: 1.0625rem;
   font-weight: bold;
@@ -459,9 +447,8 @@ export default {
   display: block;
   position: relative;
   top: 50%;
-  /* left: 50%; */
   transform: translateY(-50%);
-}
+} */
 .file-upload-img__bad-msg {
   background-color: rgba(185, 0, 0, 0.7);
   color: #fff;
