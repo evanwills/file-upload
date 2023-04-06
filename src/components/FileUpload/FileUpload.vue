@@ -18,6 +18,19 @@ export default {
      * @property {boolean} autoExclude
      */
     autoExclude: { type: Boolean, required: false, default: false },
+
+    /**
+     * If TRUE, ask the user to confirm that they really want to
+     * cancel the upload before dumping all the data.
+     *
+     * By default, when the user clicks the close button the popup
+     * is closed and all data is dumped. This just forces the user
+     * to confirm they really want to stop.
+     *
+     * @property {boolean} autoExclude
+     */
+     confirmCancel: { type: Boolean, required: false, default: false },
+
     /**
      * Text to show user to help them choose appropritate files to
      * upload
@@ -25,6 +38,7 @@ export default {
      * @property {string} helpTxt
      */
     helpTxt: { type: String, required: false, default: '' },
+
     /**
      * ID of this component. Used to add unique IDs to all fields
      * and buttons within the component
@@ -36,12 +50,14 @@ export default {
      * @property {string} id
      */
     id: { type: String, required: true },
+
     /**
      * Label to (briefly) describe the purpose of the upload
      *
      * @property {string} label
      */
     label: { type: String, required: true },
+
     /**
      * Maximum number of files the user can upload at one time
      *
@@ -58,12 +74,14 @@ export default {
      * @property {number} maxFiles
      */
     maxFiles: { type: String, required: false, default: '1' },
+
     /**
      * Maximum number of pixels an image can be in any dimension
      *
      * @property {number} maxPixels
      */
     maxPixels: { type: String, required: false, default: '1500' },
+
     /**
      * Maximum size a single file can be
      *
@@ -72,6 +90,7 @@ export default {
      * @property {string} maxSingle
      */
     maxSingle: { type: String, required: false, default: '5MB' },
+
     /**
      * Maximum total upload size for all files combined
      *
@@ -80,12 +99,14 @@ export default {
      * @property {string} maxTotal
      */
     maxTotal: { type: String, required: false, default: '15MB' },
+
     /**
      * Minimum number of files the user must upload
      *
      * @property {number} minFiles
      */
     minFiles: { type: String, required: false, default: '1' },
+
     /**
      * Whether or not the user can reorder files/images within the
      * list
@@ -97,6 +118,7 @@ export default {
      * @property {boolean} reorder
      */
     reorder: { type: Boolean, required: false, default: false },
+
     /**
      * Whether or not the selected files are being sent to the server
      *
@@ -106,6 +128,7 @@ export default {
      * @property {boolean} sending
      */
     sending: { type: Boolean, required: false, default: false },
+
     /**
      * List of file extensions matching file types the server will
      * accept

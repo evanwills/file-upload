@@ -51,6 +51,15 @@ before they can upload anything to the server. By setting
 `auto-exclude` to `TRUE`, the component automatically strips any 
 disallowed files from the list it sends to the server.
 
+### `confirm-cancel`
+
+|  Required  |    Type     | Default | Variable name |
+|------------|-------------|---------|---------------|
+| _optional_ | _{boolean}_ | `FALSE` | `confirmCancel` |
+
+Whether or not the user should be asked to confirm that they really 
+want to cancel the upload before all the data is dumped.
+
 ### `help-txt`
 
 |  Required  |    Type    |  Default:  | Variable name |
