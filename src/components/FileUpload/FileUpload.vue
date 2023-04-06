@@ -150,6 +150,8 @@ export default {
       maxPx: 1500,
       nextUID: 0,
       processingCount: 0,
+      selected: null,
+      selectedKey: -1,
       singleMax: 5242880,
       shift: false,
       tooBig: false,
@@ -681,11 +683,12 @@ export default {
         isPortrait: false,
         ready: false,
         reload: false,
+        selected: false,
         size: file.size,
         src: '',
         surplus: false,
         tooBig: file.size > this.singleMax,
-        type: file.type
+        type: file.type,
       };
 
       this.addFileToList(tmp);

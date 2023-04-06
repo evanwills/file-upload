@@ -65,6 +65,12 @@ export type fileData = {
    */
   reload: boolean,
   /**
+   * Whether or not this file has focus
+   *
+   * @property {boolean} Selected
+   */
+  selected: boolean,
+  /**
    * Current file size (in Bytes)
    *
    * @property {string} size
@@ -206,6 +212,20 @@ export type fileUploadState = {
    * @property {fileData[]} uploadList
    */
   uploadList: fileData[],
+  /**
+   * The object representing the file currently in prime position
+   * in the carousel
+   *
+   * @property {fileData|null}
+   */
+  selected: fileData | null,
+  /**
+   * The index of the file currently in prime position in the
+   * carousel array.
+   *
+   * @property {number}
+   */
+  selectedKey: number,
   /**
    * Whether or not the keyboard shift key is currently held down.
    *
