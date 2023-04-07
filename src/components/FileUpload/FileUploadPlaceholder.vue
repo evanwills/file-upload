@@ -10,7 +10,7 @@
         </g>
         <g class="placeholder-loading-indicator">
           <text transform="scale(0.26458333)" x="0" y="0">
-            <tspan x="125" y="167">Loading...</tspan>
+            <tspan x="125" y="167">Resizing...</tspan>
           </text>
           <circle r="7.5" cx="38" cy="76" />
           <circle r="7.5" cx="38" cy="105" />
