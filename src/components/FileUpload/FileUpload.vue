@@ -481,7 +481,7 @@ export default {
       this.active = false;
 
       // Send an event to the client
-      this.$emit('confirm-upload', files);
+      this.$emit('confirmupload', files);
     },
 
     handleKeyUp: function (event: KeyboardEvent) : void {
@@ -506,6 +506,10 @@ export default {
 
         case 'End':
           newKey = max;
+          break;
+
+        case 'Escape':
+          this.active = false;
           break;
       }
 
@@ -934,12 +938,20 @@ export default {
     // console.groupEnd();
   },
 
+  watch: {
+    active() {
+      if (this.active === false) {
+        this.$emit('fileuploadclosed');
+      }
+    }
+  },
+
   components: { FileUploadImage }
 }
 </script>
 
 <template>
-  <div :id="id" class="file-upload">
+  <div :id="id" class="file-upload" v-on:keyup="handleKeyUp($event)">
     <button v-on:click="toggleActive"
            :tabindex="active ? -1 : undefined"
            :disable="sending"
@@ -957,8 +969,7 @@ export default {
       </span>
     </button>
 
-    <article v-if="sending === false" :class="dialogueClass()"
-            v-on:keyup="handleKeyUp($event)">
+    <article v-if="sending === false" :class="dialogueClass()">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
         <p v-if="helpTxt !== ''" class="file-upload__help">{{ helpTxt }}</p>
@@ -1013,6 +1024,7 @@ export default {
             {{ uploadHelp }}
             <input type="file"
                    class="file-upload__input visually-hidden" :id="getID('main-input')"
+                   accesskey="a"
                   :multiple="(max > 1)"
                   :accept="accepted" v-on:change="processSelectedFiles" />
           </label>
