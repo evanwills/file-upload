@@ -314,6 +314,8 @@ User wishes to abandon their upload without sending anything to the server.
 
 ## Dependencies
 
+Other than Vue.JS, FileUpload only has one other depenency.
+
 FileUpload depends on [`image-blob-reduce`](https://github.com/nodeca/image-blob-reduce) to efficiently handle resizing images in the browser.
 
 > __Note:__ `image-blob-reduce` depends on [`pica`](https://github.com/nodeca/pica)
