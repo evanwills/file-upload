@@ -20,16 +20,26 @@ export default {
     autoExclude: { type: Boolean, required: false, default: false },
 
     /**
-     * If TRUE, ask the user to confirm that they really want to
-     * cancel the upload before dumping all the data.
-     *
-     * By default, when the user clicks the close button the popup
-     * is closed and all data is dumped. This just forces the user
-     * to confirm they really want to stop.
-     *
-     * @property {boolean} autoExclude
+     * Text for the button shown to the user asking them to confirm
+     * they want to abandon the upload, (after they have clicked the
+     * close dialogue button)
      */
-     confirmCancel: { type: Boolean, required: false, default: false },
+    cancelBtnTxt: { type: String, required: false, default: 'Discard upload' },
+
+    /**
+     * Text to show user when asking them to confirm they want to
+     * abandon the upload
+     *
+     * @property {string} helpTxt
+     */
+    cancelConfirmText: { type: String, required: false, default: '' },
+
+    /**
+     * Text for the button shown to the user asking them to confirm
+     * they want to upload their selected files.
+     * (after they have clicked the confirm and upload dialogue button)
+     */
+    confirmBtnTxt: { type: String, required: false, default: 'Send files' },
 
     /**
      * Text to show user to help them choose appropritate files to
@@ -153,6 +163,24 @@ export default {
      * @property {boolean} unlimited
      */
     unlimited: { type: Boolean, required: false, default: false },
+
+    /**
+     * The text for the button the user first sees and uses to open
+     * the full upload dialogue/widget
+     */
+    uploadBtnText: { type: String, required: false, default: 'Upload' },
+
+    /**
+     * Text to show the user when asking to confirm they want to
+     * upload the selected files
+     *
+     * Normally this would be a paragraphs explaining thanking them
+     * for uploading the files and explaining what will be done with
+     * the files once received.
+     *
+     * @property {string} helpTxt
+     */
+    uploadConfirmText: { type: String, required: false, default: '' },
   },
 
   data: function (): fileUploadState {
@@ -162,7 +190,9 @@ export default {
       allowedTypes: defaultTypes,
       badCount: 0,
       canConfirm: false,
+      confirmUpload: true,
       carouselOffset: 0,
+      confirmText: '',
       focusIndex: 0,
       full: false,
       genericTypeList: '',
@@ -176,7 +206,7 @@ export default {
       selected: null,
       selectedKey: -1,
       singleMax: 5242880,
-      shift: false,
+      showConfirm: false,
       tooBig: false,
       totalMax: 15728640,
       uploadHelp: '',
@@ -230,22 +260,12 @@ export default {
     },
 
     /**
-     * Get a class name (or names) for styling the image carousel
-     *
-     * @returns image carousel classes
-     */
-    carouselClass: function (): string {
-      const tmp = 'file-upload__carousel';
-      return `${tmp} ${tmp}--${this.uploadList.length} ${tmp}--${this.uploadList.length}-${this.focusIndex}`;
-    },
-
-    /**
      * Go through the list of selected files and check if there are
      * any issues posed by the group of files as a whole.
      */
     checkForIssues: function (forceUpdate: boolean = false): void {
       /**
-       * Old stores the current state before it gets updated.
+       * `old` stores the current state before it gets updated.
        * This can then be used to compare state after update.
        * If nothing important has been updated, there will be no
        * forced rerender. If anything has changed the component
@@ -266,14 +286,11 @@ export default {
       let totalBytes = 0;
       let newPos = -1;
 
-      // reset shift status
-      this.shift = false;
-
       for (let a = 0; a < this.uploadList.length; a += 1) {
         if (this.uploadList[a].badType === false &&
             this.uploadList[a].tooBig === false
         ) {
-          const oldSurp = this.uploadList[a].surplus
+          const oldSurp = this.uploadList[a].surplus;
           good += 1;
           this.uploadList[a].surplus = (good > this.max);
           this.uploadList[a].reload = (oldSurp !== this.uploadList[a].surplus);
@@ -307,46 +324,22 @@ export default {
         )
       );
 
-      if (forceUpdate === true) {
-        if (old.good !== this.goodCount || old.bad !== this.badCount || old.tooBig !== this.tooBig || old.full !== this.full || old.pos !== this.focusIndex) {
-          this.$forceUpdate();
-        }
+      if (forceUpdate === true ||
+          old.good !== this.goodCount ||
+          old.bad !== this.badCount ||
+          old.tooBig !== this.tooBig ||
+          old.full !== this.full ||
+          old.pos !== this.focusIndex
+      ) {
+        this.$forceUpdate();
       }
-
-      // console.log('this:', this);
-      // console.log('this.uploadList:', this.uploadList);
     },
 
     /**
      * Remove all selected files from the upload list
      */
     clearAll: function (): void {
-      // console.group('clearAll')
-      // console.groupEnd();
-
       this.uploadList = []
-    },
-
-    /**
-     * Get a class name (or names) for styling the main upload
-     * dialogue/modal
-     *
-     * @returns dialogue/modal classes
-     */
-    dialogueClass: function (): string {
-      const mode: string = (this.uploadList.length === 0)
-        ? 'none'
-        : 'some';
-      const clsName: string = 'file-upload__dialogue';
-      let output: string = clsName;
-
-      if (this.active === true) {
-        output += ' ' + clsName + '--active';
-      }
-
-      output += ' ' + clsName + '--' + mode;
-
-      return output;
     },
 
     /**
@@ -356,10 +349,6 @@ export default {
      * @param fileName Name of file to be removed from the list.
      */
     deleteFile: function (fileName: string): void {
-      // console.group('FileUpload - deleteFile()')
-      // console.log('fileName:', fileName);
-
-      // console.groupEnd();
       this.uploadList = this.uploadList.filter((file : fileData) => file.name !== fileName);
 
       this.checkForIssues(true);
@@ -367,7 +356,6 @@ export default {
       if (this.focusIndex >= this.uploadList.length) {
         this.focusIndex = this.uploadList.length - 1;
       }
-      // this.checkForIssues();
     },
 
     /**
@@ -405,15 +393,6 @@ export default {
       return output;
     },
 
-    // /**
-    //  * Get inline carousel styles
-    //  *
-    //  * @returns Inline CSS for styling carousel
-    //  */
-    // getCarouselOffset: function () : string {
-    //   return `--carousel-offset: calc(${this.carouselOffset}px - 2.75rem);`;
-    // },
-
     /**
      * Get inline carousel styles
      *
@@ -421,6 +400,44 @@ export default {
      */
     getCarouselStyle: function () : string {
       return `--carousel-items: ${this.uploadList.length}; --carousel-pos: ${this.focusIndex};`;
+    },
+
+    /**
+     * Text in button used to confirm the user is happy with their
+     * selected files and is ready to send them to the server.
+     *
+     * @returns Button text for confirming upload is ready
+     */
+    getConfirmUploadBtnTxt: function () : string {
+      return (this.uploadConfirmText === '')
+        ? 'Confirm and upload'
+        : 'Upload';
+    },
+
+    /**
+     * Get a class name (or names) for styling the main upload
+     * dialogue/modal
+     *
+     * @returns dialogue/modal classes
+     */
+    getDialogueClass: function (): string {
+      const clsName: string = 'file-upload__dialogue';
+      let output: string = clsName;
+
+      if (this.active === true) {
+        output += ' ' + clsName + '--active';
+      }
+
+      if (this.showConfirm === true) {
+        output += ' ' + clsName + '--confirm';
+      } else {
+        output += ' ' + clsName + '--';
+        output += (this.uploadList.length === 0)
+          ? 'none'
+          : 'some';
+      }
+
+      return output;
     },
 
     /**
@@ -462,7 +479,69 @@ export default {
     },
 
     /**
+     * Handle when user tries to close the upload dialogue interface
+     *
+     * Check if the button is disabled. If not, do what's needed to
+     * close the dialogue
+     *
+     * @param event Click event
+     */
+    handleClose: function (event: Event) : void {
+      const btn = event.target as HTMLButtonElement;
+
+      if (btn.disabled === false) {
+        this.handleCloseInner();
+      }
+    },
+
+    /**
+     * Handle when user tries to close the upload dialogue interface
+     *
+     * * If no good files have been selected, or
+     *   `cancel-confirm-text` is not set (or is empty), just close
+     *   the dialogue.
+     * * If one or more good files have been selected and
+     *   `cancel-confirm-text` is set (and is not empty), show
+     *   another dialogue asking the user to really confirm the want
+     *   to give up.
+     *
+     * @param event Click event
+     */
+    handleCloseInner: function () : void {
+      if (this.goodCount === 0 ||this.cancelConfirmText === '') {
+        this.toggleActive();
+      } else {
+        this.confirmText = this.cancelConfirmText;
+        this.confirmUpload = false,
+        this.showConfirm = true;
+      }
+    },
+
+    /**
      * Handle when user clicks "Confirm and upload"
+     *
+     * * If there is no `upload-confirm-text`, just close the
+     *   dialogue and do all the work required to send the files
+     *   (see `handleConfirmInner()` for more info)
+     * * If `upload-confirm-text` is set (and not empty), show
+     *   another dialogue with confirmation information and a final
+     *   conform button plus a cancel button to go back to the
+     *   carousel interface.
+     */
+    handleConfirm: function () : void {
+      if (this.uploadConfirmText === '') {
+        this.handleConfirmInner();
+      } else {
+        this.confirmText = this.uploadConfirmText;
+        this.confirmUpload = true,
+        this.showConfirm = true;
+      }
+    },
+
+    /**
+     * Do all the stuff requred to prepare files for upload, then
+     * send an event to let the client code know the upload is ready
+     * to be processed.
      *
      * 1. Gather all the valid `File` objects into an array
      * 2. Dump all the (now) redundant data for each file
@@ -470,7 +549,7 @@ export default {
      * 4. Send a "confirmupload" event to the parent component along
      *    with the list of `File` objects to be uploaded
      */
-    handleConfirm: function () : void {
+    handleConfirmInner: function () : void {
       // get list of File objects
       const files = this.uploadList.filter(data => (!data.badType && !this.tooBig && !data.surplus)).map(data => data.file);
 
@@ -479,38 +558,71 @@ export default {
 
       // Close modal
       this.active = false;
+      this.showConfirm = false;
 
       // Send an event to the client
       this.$emit('confirmupload', files);
     },
 
+    /**
+     * Handle user clicking the cancel button in the final
+     * confirmation screen
+     */
+    handleUnconfirm: function () : void {
+      this.confirmText = '';
+      this.showConfirm = false;
+    },
+
+    /**
+     * Handle user keyboard interactions
+     *
+     * @param event
+     */
     handleKeyUp: function (event: KeyboardEvent) : void {
       const max = (this.uploadList.length - 1);
       const oldKey = this.focusIndex;
       let newKey = oldKey;
 
-      switch (event.key) {
-        case 'ArrowRight':
-        case 'ArrowDown':
-          newKey = oldKey + 1;
-          break;
+      if (this.showConfirm === false) {
+        switch (event.key) {
+          case 'ArrowRight':
+          case 'ArrowDown':
+            newKey = oldKey + 1;
+            break;
 
-        case 'ArrowLeft':
-        case 'ArrowUp':
-          newKey = oldKey - 1;
-          break;
+          case 'ArrowLeft':
+          case 'ArrowUp':
+            newKey = oldKey - 1;
+            break;
 
-        case 'Home':
-          newKey = 0;
-          break;
+          case 'PageUp':
+            newKey = (oldKey === 0)
+              ? max
+              : (oldKey > 10)
+                ? oldKey - 10
+                : 0;;
+            break;
 
-        case 'End':
-          newKey = max;
-          break;
+          case 'PageDown':
+            newKey = (oldKey === max)
+              ? 0
+              : (oldKey < (max - 10))
+                ? oldKey + 10
+                : max;
+            break;
 
-        case 'Escape':
-          this.active = false;
-          break;
+          case 'Home':
+            newKey = 0;
+            break;
+
+          case 'End':
+            newKey = max;
+            break;
+
+          case 'Escape':
+              this.handleCloseInner();
+              break;
+        }
       }
 
       if (newKey < 0) {
@@ -551,14 +663,8 @@ export default {
      * @param fileName name of file passed from FileUploadImage
      */
     moveFileLeft: function (fileName: string): void {
-      // console.group('FileUpload - moveFileLeft()')
-      // console.log('fileName:', fileName);
-      // console.log('this.uploadList (before):', this.uploadList);
-
       this.uploadList = moveFile(this.uploadList, fileName, -1);
       this.checkForIssues();
-      // console.log('this.uploadList (after):', this.uploadList);
-      // console.groupEnd();
     },
 
     /**
@@ -570,15 +676,8 @@ export default {
      * @param fileName name of file passed from FileUploadImage
      */
     moveFileRight: function (fileName: string): void {
-      // console.group('FileUpload - moveFileRight()')
-      // console.log('fileName:', fileName);
-      // console.log('this.uploadList (before):', this.uploadList);
-
       this.uploadList = moveFile(this.uploadList, fileName, 1);
       this.checkForIssues();
-
-      // console.log('this.uploadList (after):', this.uploadList);
-      // console.groupEnd();
     },
 
     /**
@@ -591,7 +690,6 @@ export default {
         // Wrap focus around to beginning
         this.focusIndex = 0;
       }
-      this.shift = false;
     },
 
     /**
@@ -604,7 +702,6 @@ export default {
         // Wrap focus around to end
         this.focusIndex = (this.uploadList.length - 1);
       }
-      this.shift = false;
     },
 
     /**
@@ -635,30 +732,6 @@ export default {
                 lastModified: Date.now(),
             });
 
-            // const isPortrait = imgIsPortrait(newFile);
-
-            // isPortrait.then(() => {
-            //   data.ext = getFileExt(newFile);
-            //   data.file = newFile;
-            //   data.isPortrait =
-            //   data.ready = true;
-            //   data.size = newFile.size;
-            //   data.src = URL.createObjectURL(newFile);
-            //   data.tooBig = newFile.size > this.singleMax;
-
-            //   console.group('processFileInner()')
-            //   console.log('data.size:', data.size)
-            //   console.log('data.isPortrait:', data.isPortrait)
-            //   console.log('newFile.size:', newFile.size)
-            //   console.log('this.singleMax:', this.singleMax)
-            //   console.log('data.tooBig:', data.tooBig)
-            //   console.groupEnd();
-
-            //   this.addFileToList(data);
-            //   this.checkForIssues(true);
-            //   this.$forceUpdate();
-            // });
-
             data.ext = getFileExt(newFile);
             data.file = newFile;
             data.isPortrait = true;
@@ -677,7 +750,6 @@ export default {
 
             this.addFileToList(data);
             this.checkForIssues(true);
-            this.$forceUpdate();
           });
         } else {
           data.file = file;
@@ -685,6 +757,8 @@ export default {
           this.addFileToList(data);
           this.checkForIssues(true);
         }
+      } else {
+        this.checkForIssues(true);
       }
     },
 
@@ -731,10 +805,6 @@ export default {
      */
     processSelectedFiles: function (e: Event): void {
       const files = (e.target as HTMLInputElement).files;
-      // console.log('event:', e);
-      // console.log('event.target:', e.target);
-      // console.log('files:', files);
-      // const selectedFiles = event.target.files;
 
       // Put the focus at the start of the latest additional files
       const newIndex = (this.uploadList.length > 0)
@@ -760,18 +830,9 @@ export default {
      * @param newFile New file to replace old one.
      */
     replaceFile: function ({ oldName, newFile } : replaceData): void {
-      // console.group('FileUpload - replaceFile()')
-      // console.log('oldName:', oldName);
-      // console.log('newFile:', newFile);
-      // console.log('this.uploadList.length:', this.uploadList.length);
-
       let ok = false;
 
       for (let a = 0; a < this.uploadList.length; a += 1) {
-        // console.log('oldName:', oldName);
-        // console.log('this.uploadList[' + a + ']:', this.uploadList[a])
-        // console.log('this.uploadList[' + a + '].name:', this.uploadList[a].name)
-
         if (this.uploadList[a].name === oldName) {
           ok = true;
 
@@ -796,8 +857,6 @@ export default {
       if (ok === false) {
         throw new Error('could not find file ("' + oldName + '") to replace with "' + newFile.name + '"');
       }
-
-      // console.groupEnd();
     },
 
     /**
@@ -809,20 +868,13 @@ export default {
      */
     toggleActive: function (): void {
       this.active = !this.active;
+      this.showConfirm = false;
+      this.confirmText = '';
 
       if (this.active === false) {
         this.uploadList = [];
       }
     },
-
-    // updateCarouselOffset: function () {
-    //   // console.group('updateCarouselOffset()')
-    //   // console.log('this.carouselOffset (before):', this.carouselOffset)
-    //   const body = document.getElementsByTagName('body');
-    //   this.carouselOffset = Math.floor(body[0].clientWidth / 2);
-    //   // console.log('this.carouselOffset (after):', this.carouselOffset)
-    //   // console.groupEnd();
-    // },
 
     updateSelected(oldKey: number, newKey: number, max: number) : boolean {
       if (newKey < 0) {
@@ -846,7 +898,6 @@ export default {
   },
 
   mounted: function (): void {
-    // console.group('mounted()')
     this.allowedTypes = getAllowedTypes(this.types);
     const genericTypes: string[] = [];
     const typeList: string[] = [];
@@ -867,13 +918,9 @@ export default {
 
     this.maxPx = parseInt(this.maxPixels);
     this.singleMax = humanFileSizeToBytes(this.maxSingle);
-    // console.log('this.singleMax:', this.singleMax);
     this.totalMax = humanFileSizeToBytes(this.maxTotal);
-    // console.log('this.totalMax:', this.maxTotal);
     this.humanTypeList = humanImplode(typeList);
     this.genericTypeList = humanImplode(genericTypes);
-    // console.log('human file types:', this.humanTypeList);
-    // console.log('generic file types:', this.genericTypeList);
 
     // --------------------------------------------------------------
     // START: Prepare file input label text
@@ -925,17 +972,6 @@ export default {
 
     //  END:  Prepare file input label text
     // --------------------------------------------------------------
-    // START: Get carousel offset
-
-    // this.updateCarouselOffset();
-
-    // window.addEventListener('resize', this.updateCarouselOffset, true);
-
-    //  END:  Get carousel offset
-    // --------------------------------------------------------------
-    // console.log('this:', this);
-    // console.log('this.id:', this.id);
-    // console.groupEnd();
   },
 
   watch: {
@@ -954,22 +990,22 @@ export default {
   <div :id="id" class="file-upload" v-on:keyup="handleKeyUp($event)">
     <button v-on:click="toggleActive"
            :tabindex="active ? -1 : undefined"
-           :disable="sending"
+           :disable="sending || active"
             accesskey="u"
             class="file-upload__open">
-      Upload
+      {{ uploadBtnText }}
       <span class="visually-hidden">{{ genericTypeList }} files</span>
     </button>
     <button :class="activeClass('bg-close')"
-            :tabindex="active ? undefined : -1"
-            :disable="sending"
-             v-on:click="toggleActive" >
+            :tabindex="(!active || showConfirm) ? -1 : undefined"
+            :disabled="(sending || showConfirm) ? true : undefined"
+             v-on:click="handleClose($event)" >
       <span class="visually-hidden">
         Close upload {{ genericTypeList }} files
       </span>
     </button>
 
-    <article v-if="sending === false" :class="dialogueClass()">
+    <article v-if="showConfirm === false && sending === false" :class="getDialogueClass()">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
         <p v-if="helpTxt !== ''" class="file-upload__help">{{ helpTxt }}</p>
@@ -1029,7 +1065,7 @@ export default {
                   :accept="accepted" v-on:change="processSelectedFiles" />
           </label>
         </p>
-        <p v-else-if="goodCount > 0 && (uploadList.length > max || badCount > 0)"
+        <p v-else-if="uploadList.length > max || badCount > 0"
            class="file-upload__bad-list-msg">
           {{ getBadListMsg() }}
         </p>
@@ -1051,24 +1087,36 @@ export default {
                   v-on:click="handleConfirm"
                   accesskey="s"
                   class="file-upload__confirm--btn">
-            Confirm and upload
+            {{ getConfirmUploadBtnTxt() }}
           </button>
         </p>
       </footer>
       <button class="file-upload__main-close"
-              v-on:click="toggleActive"
+              v-on:click="handleClose"
              :tabindex="active ? undefined : -1">
         <span class="visually-hidden">
           Close upload {{ genericTypeList }} files
         </span>
       </button>
     </article>
-    <article v-if="sending === true" :class="dialogueClass()">
+    <article v-if="showConfirm === false && sending === true" :class="getDialogueClass()">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
         <p>Your files are being sent to the server</p>
-
       </header>
+    </article>
+    <article v-if="showConfirm === true" :class="getDialogueClass()">
+      <header>
+        <h2 class="file-upload__head">{{ label }}</h2>
+      </header>
+      <p class="file-upload__confirm-txt">{{ confirmText }}</p>
+      <footer>
+        <p class="file-upload__confirm-btns">
+          <button v-if="confirmUpload === true" @click="handleConfirmInner" class="file-upload__confirm-btn__confirm">{{ confirmBtnTxt }}</button>
+          <button v-else @click="toggleActive" class="file-upload__confirm-btn__confirm">{{ cancelBtnTxt }}</button>
+          <button @click="handleUnconfirm" class="file-upload__confirm-btn__cancel">Cancel</button>
+        </p>
+      </footer>
     </article>
   </div>
 </template>
@@ -1107,9 +1155,12 @@ export default {
   width: 100%;
 }
 .file-upload__bg-close--active {
-  opacity: 1;
+  opacity: 8;
   transform: translate(-50%, -50%) scale(1);
   transition: transform ease-in-out 0.3s, opacity ease-in-out 0.3s;
+}
+.file-upload__bg-close:disabled {
+  cursor: auto;
 }
 
 .file-upload__dialogue {
@@ -1333,6 +1384,20 @@ export default {
   text-align: center;
 }
 
+.file-upload__confirm-txt {
+   margin: 0 2rem 0.5rem;
+}
+.file-upload__confirm-btns {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  column-gap: 2rem;
+  margin: 1rem 0 0;
+}
+.file-upload__confirm-btns > button {
+  flex-grow: 1;
+}
+
 @media screen and (min-height: 26rem) and (min-width: 26rem) {
   .file-upload__dialogue {
     --file-upload-item-width: 12rem;
@@ -1430,7 +1495,7 @@ export default {
     height: 100%;
     top: 0;
     transform: none;
-    width: calc(calc(100% - 22rem) / 2);
+    width: calc(calc(100% - var(--file-upload-item-width)) / 2);
   }
   .file-upload__carousel_btn:hover,
   .file-upload__carousel_btn:focus {

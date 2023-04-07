@@ -21,11 +21,7 @@ export const getAllowedTypes = (types: string) : mimeType[] => {
   const good : string[] = [];
   const output : mimeType[] = [];
   const bad : string[] = [];
-  // console.group('getAllowedTypes()')
-  // console.log('types:', types);
-
   const typeList = types.replace(/[\t\n\r\s :;|,]+/g, ' ').trim().split(' ');
-  // console.log('typeList:', typeList)
 
   if (typeList.length > 0) {
     for (let a = 0; a < typeList.length; a += 1) {
@@ -43,22 +39,17 @@ export const getAllowedTypes = (types: string) : mimeType[] => {
       }
     }
 
-    // console.log('output:', output)
-    // console.log('good:', good)
-    // console.log('bad:', bad)
-
     if (good.length === 0) {
       console.error(
-        'Bad file mime types specified in <file-upload> component: "' + bad.join('", "') + '"'
+        'Bad file mime types specified in <file-upload> component: "' +
+        bad.join('", "') + '"'
       );
-      // console.groupEnd()
+
       return defaultTypes;
     } else {
-      // console.groupEnd()
       return output;
     }
   } else {
-    // console.groupEnd()
     return defaultTypes;
   }
 };
@@ -150,6 +141,7 @@ export const isBadType = (type : string, allowedTypes : mimeType[]) : boolean =>
       return false;
     }
   }
+
   return true;
 }
 

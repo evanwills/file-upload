@@ -49,13 +49,27 @@ browser before they're sent to the server.
    is in focus.
 6. When an image/file has focus in the carousel, extra controls are 
    shown for that image/file:
-   * (If enabled) the image/file can be moved left or right relative 
+   * *(If enabled)* The image/file can be moved left or right relative 
      to its neighbour.
    * The image/file can be replaced with a different image/file from 
      the file system.
    * The image/file can be deleted. (removed from the upload list.)
-7. (unless `auto-exclude` is set) The user will be required to remove any files that are over-sized, a forbidden file type or in excess of the maximum number of files allowed. Or if the maximum total upload size is exceeded.
-8. Once all bad files are removed the user can click the "Confirm and upload" button.
+7. *(unless `auto-exclude` attribute is set)* The user will be required 
+   to remove any files that are over-sized, a forbidden file type or 
+   in excess of the maximum number of files allowed. Or if the 
+   maximum total upload size is exceeded.
+8. Once all bad files are removed the user can click the 
+   __`Confirm and upload`__ button.
+9. * *(If `upload-confirm-text` attribute was set and not empty)* 
+      The user will then have a final prompt to confirm they are 
+      happy with their selection.
+      1. The user can then either click __`Cancel`__ to go back to 
+         the carousel interface<br />
+         OR
+      2. Click __`Send files`__ to get `FileUpload` to tell the 
+         client to do the upload work.
+   * *(If no confirmation is required)* `FileUpload` will tell the 
+      client to do the upload work.
 
 ---
 
@@ -94,14 +108,37 @@ before they can upload anything to the server. By setting
 `auto-exclude` to `TRUE`, the component automatically strips any 
 disallowed files from the list it sends to the server.
 
-### `confirm-cancel`
+### `cancel-btn-txt`
 
-|  Required  |    Type     | Default | Variable name |
-|------------|-------------|---------|---------------|
-| _optional_ | _{boolean}_ | `FALSE` | `confirmCancel` |
+|  Required  |    Type    |      Default       | Variable name  |
+|------------|------------|--------------------|----------------|
+| _optional_ | _{string}_ | "`Discard upload`" | `cancelBtnTxt` |
 
-Whether or not the user should be asked to confirm that they really 
-want to cancel the upload before all the data is dumped.
+Text for the button shown to the user asking them to confirm they 
+really want to abandon the upload. 
+(Show after they have clicked the close dialogue button.)
+
+### `cancel-confirm-text`
+
+|  Required  |    Type    |  Default   |    Variable name    |
+|------------|------------|------------|---------------------|
+| _optional_ | _{string}_ | "" (empty) | `cancelConfirmText` |
+
+Text to show user when the need to confirm they really want to
+abandon the upload. 
+
+Normally this would be a brief paragraph of text asking them to 
+reconsider abandoning the upload.
+
+### `confirm-btn-txt`
+
+|  Required  |    Type    |    Default     |  Variable name  |
+|------------|------------|----------------|-----------------|
+| _optional_ | _{string}_ | "`Send files`" | `confirmBtnTxt` |
+
+Text for the button shown to the user asking them to confirm they 
+want to upload their selected files.
+(Show after they have clicked the close dialogue button.)
 
 ### `help-txt`
 
@@ -192,7 +229,8 @@ Whether or not user can reorder files displayed in the file/image carousel
 |------------|------------|-------------------------------|---------------|
 | _optional_ | _{string}_ | "`png jpg webp pdf docx doc`" |    `types`    |
 
-List of file types (file extensions) the server will accept. (list will be split on white space and/or punctuation)
+List of file types (file extensions) the server will accept. 
+(List will be split on white space and/or punctuation)
 
 ### `unlimited`
 
@@ -207,6 +245,27 @@ files.
 >
 > If you want to allow users to upload more than 999 files in one
 > go, do __*NOT*__ use `unlimited`.
+
+### `upload-btn-txt`
+
+|  Required  |    Type    |  Default   |  Variable name  |
+|------------|------------|------------|-----------------|
+| _optional_ | _{string}_ | "`Upload`" | `uploadBtnText` |
+
+The text for the button the user first sees and uses to open the full 
+upload dialogue/widget
+
+### `upload-confirm-text`
+
+|  Required  |    Type    |  Default   |    Variable name    |
+|------------|------------|------------|---------------------|
+| _optional_ | _{string}_ | "" (empty) | `uploadConfirmText` |
+
+Text to show user to help them choose appropritate files to upload
+
+Normally this would be a paragraphs explaining thanking them for 
+uploading the files and explaining what will be done with the files 
+once received.
 
 ----
 
@@ -274,10 +333,9 @@ Close the upload dialogue and cancel the upload without sending anything to the 
 
 #### `Page Up` - Jump carousel left
 
-Move carousel focus up to ten images to the left (or start if it's less than 10 images away)
-> __Note:__ Both of the following do the same thing
-> *  *`Shift`* + *`Left` arrow*
-> *  *`Shift`* + *`Up` arrow*
+Move carousel focus up to ten images to the left (or start if it's less than 10 images away).
+If carousel is already at the start. `Page Up` loops around to the end.
+
 
 #### `Home` - Jump to carousel start
 
@@ -286,10 +344,7 @@ move to the first image/file in the carousel
 #### `Page Down` - Jump carousel right
 
 Move carousel focus up to ten images to the left (or start if it's less than 10 images away)
-
-> __Note:__ Both of the following do the same thing
-> *  *`Shift`* + *`Right` arrow*
-> *  *`Shift`* + *`Down` arrow*
+If carousel is already at the end. `Page Down` loops around to the start.
 
 #### `End` - Jump to carousel end
 

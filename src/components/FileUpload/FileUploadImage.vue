@@ -128,40 +128,48 @@ export default {
   components: { FileUploadPlaceholder },
 
   methods: {
+    /**
+     * Removing this file from the list of files to be uploaded
+     *
+     * @param e
+     */
     deleteClick: function (e: Event) : void {
       const btn = (e.target as HTMLButtonElement);
-      // console.group('Image - delete()')
-      // console.log('event:', e);
-      // console.log('event.target:', e.target);
-      // console.log('btn:', btn);
-      // console.groupEnd();
+
       this.$emit('delete', this.fileName);
     },
+
+    /**
+     * Handle swapping this file's position with its left hand
+     * neighbour
+     *
+     * @param e
+     */
     moveLeftClick: function (e: Event) : void {
       const btn = (e.target as HTMLButtonElement);
-      // console.group('Image - moveLeft()')
-      // console.log('event:', e);
-      // console.log('event.target:', e.target);
-      // console.log('btn:', btn);
-      // console.groupEnd();
+
       this.$emit('moveleft', this.fileName);
     },
+
+    /**
+     * Handle swapping this file's position with its right hand
+     * neighbour
+     *
+     * @param e
+     */
     moveRightClick: function (e: Event) : void {
       const btn = (e.target as HTMLButtonElement);
-      // console.group('Image - moveRight()')
-      // console.log('event:', e);
-      // console.log('event.target:', e.target);
-      // console.log('btn:', btn);
-      // console.groupEnd();
+
       this.$emit('moveright', this.fileName);
     },
+
+    /**
+     * Handle replacing the existing file with a newly selected file
+     * from user's file system
+     *
+     * @param e
+     */
     replaceClick: function (e: Event) : void {
-      const btn = (e.target as HTMLButtonElement);
-      // console.group('Image - replace()')
-      // console.log('event:', e);
-      // console.log('event.target:', e.target);
-      // console.log('btn:', btn);
-      // console.groupEnd();
       const files = (e.target as HTMLInputElement).files;
 
       if (typeof files !== null) {
@@ -174,6 +182,7 @@ export default {
         );
       }
     },
+
     /**
      * Handle user releasing a pressed keyboard key
      *
@@ -182,6 +191,7 @@ export default {
     keyUpEvent: function (keyEvent : KeyboardEvent) : void {
       this.$emit('keyup', keyEvent)
     },
+
     /**
      * Get a unique ID to user as the value for a label's `for`
      * attribute and an ID for the associated input field.
@@ -194,6 +204,11 @@ export default {
         return getFieldID(this.id, suffix);
     },
 
+    /**
+     * Get class names to use on element wrapping buttons
+     *
+     * @returns btn-block classes for button wrapper
+     */
     getBtnBlockClass: function () : string {
       const tmp = 'file-upload-img__btn-block';
 
@@ -202,6 +217,11 @@ export default {
         : tmp;
     },
 
+    /**
+     * Get class names to use on placeholder element
+     *
+     * @returns placeholder classes
+     */
     getPlaceholderClass: function () : string {
       const tmp = 'file-upload-img__placeholder';
 
@@ -210,6 +230,13 @@ export default {
         : tmp;
     },
 
+    /**
+     * Make the file name wrappable but inserting a zero-width space
+     * before any non alpha-numeric character
+     *
+     * @returns string with zero-width spaces added to help file
+     *          names wrap
+     */
     makeWrapable: function () : string {
       return this.fileName.replace(/(?=[^a-z0-9]+)/ig, '\u200B')
     }
@@ -217,12 +244,7 @@ export default {
 
   mounted: function () : void {
     const tmp = 'file-upload-img';
-    // console.group('FileUploadImage.mounted()')
-    // console.log('this.ext:', this.ext)
-    // console.log('this.fileType:', this.fileType)
-    // console.log('this.isTooBig:', this.isTooBig)
-    // console.log('this.isBadType:', this.isBadType)
-    // console.log('this.isSurplus:', this.isSurplus)
+
     if (this.isTooBig === true || this.isBadType === true) {
       this.isBad = true;
 
@@ -236,10 +258,8 @@ export default {
     this._ext = (this.isReady === false)
       ? `Processing ${this.ext} image`
       : this.ext;
+
     this._fileName = this.fileName.replace(/([^a-z0-9]+)/ig, '$1&ZeroWidthSpace;')
-    // console.log('this.isBad:', this.isBad)
-    // console.log('this.wrapClass:', this.wrapClass)
-    // console.groupEnd();
   },
 }
 
@@ -251,9 +271,9 @@ export default {
     <figcaption :class="(fileSrc !== '') ? 'file-upload-img--img' : 'file-upload-img--file'">
       <span  class="file-upload-img__pos">{{ (pos + 1) }}</span>
       <span class="file-upload-img__file-name" v-html="_fileName"></span>
-      <p v-if="isTooBig === true" class="file-upload-img__bad">This file is too large to be uploaded. Please replace it with a smaller version or delete it from the upload list</p>
+      <!-- <p v-if="isTooBig === true" class="file-upload-img__bad">This file is too large to be uploaded. Please replace it with a smaller version or delete it from the upload list</p>
       <p v-if="isBadType === true" class="file-upload-img__bad-msg">You cannot upload a <code>.{{ ext }}</code> type file. Please delete or replace it.</p>
-      <p v-if="isSurplus === true" class="file-upload-img__bad-msg">There are already too many files in the list. Either move this file up the list or delete it.</p>
+      <p v-if="isSurplus === true" class="file-upload-img__bad-msg">There are already too many files in the list. Either move this file up the list or delete it.</p> -->
     </figcaption>
 
     <div class="file-upload-img__img">
@@ -479,9 +499,9 @@ export default {
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.875rem;
   hyphens: auto;
-  margin: -1.35rem 0.5rem;
+  margin: -1.35rem 0 0;
   overflow-wrap: anywhere;
-  padding: 0 0.5rem;
+  padding: 0 2rem;
   text-align: center;
   word-break: break-all;
   white-space: normal;

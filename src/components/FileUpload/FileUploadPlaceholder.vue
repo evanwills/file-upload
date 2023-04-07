@@ -1,5 +1,5 @@
 <template>
-  <svg width="16.4rem" viewBox="0 0 210 297" version="1.1" xmlns="http://www.w3.org/2000/svg" :class="stateClass()">
+  <svg height="100%" viewBox="0 0 210 297" version="1.1" xmlns="http://www.w3.org/2000/svg" :class="stateClass()">
       <g>
         <g class="placeholder-faux-text-block">
           <rect width="120" height="22" x="28" y="28" />
@@ -27,15 +27,15 @@
         <g v-if="errorCount > 0" class="placeholder-error-msg" >
           <rect width="210" height="297" x="-1.7763568e-15" y="-1.7763568e-15" />
           <text transform="scale(0.26458333)" class="placeholder-message-error" x="0" y="0">
-            <tspan x="113" y="179">Error</tspan>
+            <tspan x="120" y="170">Error</tspan>
           </text>
           <text transform="scale(0.26458333)" x="0" y="0">
-            <tspan x="113" y="310">{{ error1a }}</tspan>
-            <tspan x="113" y="422">{{ error1b }}.</tspan>
+            <tspan x="120" y="310">{{ error1a }}</tspan>
+            <tspan x="120" y="421">{{ error1b }}.</tspan>
           </text>
           <text v-if="errorCount > 1" transform="scale(0.26458333)" x="-262.33609" y="0">
-            <tspan x="113" y="559">{{ error2a }}</tspan>
-            <tspan x="113" y="670">{{ error2b }}.</tspan>
+            <tspan x="120" y="559">{{ error2a }}</tspan>
+            <tspan x="120" y="670">{{ error2b }}.</tspan>
           </text>
         </g>
         <g class="placeholder-file-meta">
@@ -86,16 +86,22 @@ export default {
   },
 
   mounted() : void {
+    this.errorCount = 0;
+
     if (this.isBad) {
       this.error1a = 'Forbidden file';
       this.error1b = 'type';
+      this.errorCount += 1;
+
       if (this.tooLarge) {
         this.error2a = 'File size is too';
         this.error2b = 'large';
+        this.errorCount += 1;
       }
     } else if (this.tooLarge) {
       this.error1a = 'File size is too';
       this.error1b = 'large';
+      this.errorCount += 1;
     }
   }
 }

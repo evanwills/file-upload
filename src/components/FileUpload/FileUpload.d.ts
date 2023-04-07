@@ -134,6 +134,11 @@ export type fileUploadState = {
    * Whether or not the user can confirm their selection of files
    * and send them to the server
    *
+   * > __Note:__ Only TRUE if there are no bad files, and total
+   * >           upload size is within maximum upload limit.
+   * >           OR
+   * >           `auto-exclue` attribute is present
+   *
    * @property {boolean} canConfirm
    */
   canConfirm: boolean,
@@ -143,6 +148,20 @@ export type fileUploadState = {
    * @property {number} carouselOffset
    */
   carouselOffset: number,
+  /**
+   * Text to render when user is asked to either confirm or cancel
+   * upload
+   *
+   * @property {string} confirmText
+   */
+  confirmText: string
+  /**
+   * Whether or not the confirmation screen is for confirming upload
+   * or confirming abandonment of upload
+   *
+   * @property {boolean} full
+   */
+  confirmUpload: boolean,
   /**
    * Whether or not the user has already selected the maximum number
    * of (valid) files they can
@@ -227,11 +246,11 @@ export type fileUploadState = {
    */
   selectedKey: number,
   /**
-   * Whether or not the keyboard shift key is currently held down.
+   * Whether or not to render the confirmation screen
    *
-   * @property {boolean} shift
+   * @property {boolean} showConfirm
    */
-  shift: boolean,
+  showConfirm: boolean,
   /**
    * Maximum number of bytes a single file can be
    *
