@@ -579,61 +579,78 @@ export default {
      * @param event
      */
     handleKeyUp: function (event: KeyboardEvent) : void {
-      const max = (this.uploadList.length - 1);
-      const oldKey = this.focusIndex;
-      let newKey = oldKey;
+      if (this.active === true) {
+        // Only process keyboard events while active.
 
-      if (this.showConfirm === false) {
-        switch (event.key) {
-          case 'ArrowRight':
-          case 'ArrowDown':
-            newKey = oldKey + 1;
-            break;
+        const max = (this.uploadList.length - 1);
+        const oldKey = this.focusIndex;
+        let newKey = oldKey;
 
-          case 'ArrowLeft':
-          case 'ArrowUp':
-            newKey = oldKey - 1;
-            break;
+        if (this.showConfirm === false) {
+          // Process keyboard events
+          switch (event.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+              newKey = oldKey + 1;
+              break;
 
-          case 'PageUp':
-            newKey = (oldKey === 0)
-              ? max
-              : (oldKey > 10)
-                ? oldKey - 10
-                : 0;;
-            break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+              newKey = oldKey - 1;
+              break;
 
-          case 'PageDown':
-            newKey = (oldKey === max)
-              ? 0
-              : (oldKey < (max - 10))
-                ? oldKey + 10
-                : max;
-            break;
+            case 'PageUp':
+              newKey = (oldKey === 0)
+                ? max
+                : (oldKey > 10)
+                  ? oldKey - 10
+                  : 0;;
+              break;
 
-          case 'Home':
-            newKey = 0;
-            break;
+            case 'PageDown':
+              newKey = (oldKey === max)
+                ? 0
+                : (oldKey < (max - 10))
+                  ? oldKey + 10
+                  : max;
+              break;
 
-          case 'End':
-            newKey = max;
-            break;
+            case 'Home':
+              newKey = 0;
+              break;
 
-          case 'Escape':
+            case 'End':
+              newKey = max;
+              break;
+
+            case 'Escape':
               this.handleCloseInner();
               break;
+          }
+        } else {
+          // Where in the confirmation UI.We need to do things a bit
+          // differently.
+
+          if (event.key === 'Escape') {
+            // They've pressed the Escape key. Cancel the confirmation
+            // UI so they can go back to what they were doing before.
+            this.showConfirm = false;
+            this.confirmText = '';
+          }
         }
-      }
 
-      if (newKey < 0) {
-        newKey = max;
-      } else if (newKey > max) {
-        newKey = 0;
-      }
+        // Check if the focus has run over the upper or lower limits.
+        // If so, loop around to the other end.
+        if (newKey < 0) {
+          newKey = max;
+        } else if (newKey > max) {
+          newKey = 0;
+        }
 
-      if (oldKey !== newKey) {
-        this.focusIndex = newKey;
-        this.$forceUpdate();
+        if (oldKey !== newKey) {
+          this.focusIndex = newKey;
+          this.$forceUpdate();
+        }
       }
     },
 
@@ -651,6 +668,7 @@ export default {
           return true;
         }
       }
+
       return false;
     },
 
@@ -725,12 +743,13 @@ export default {
             .then(async (blob: Blob) => {
             // Convert image blob to file object
             const newFile = new File(
-            // Blob must be wrapped within array for file object
-            // constructor
-            [blob], file.name, {
-                type: blob.type,
-                lastModified: Date.now(),
-            });
+              // Blob must be wrapped within array for file object
+              // constructor
+              [blob], file.name, {
+                  type: blob.type,
+                  lastModified: Date.now(),
+              }
+            );
 
             data.ext = getFileExt(newFile);
             data.file = newFile;
@@ -740,13 +759,13 @@ export default {
             data.src = URL.createObjectURL(newFile);
             data.tooBig = newFile.size > this.singleMax;
 
-            console.group('processFileInner()')
-            console.log('data.size:', data.size)
-            console.log('data.isPortrait:', data.isPortrait)
-            console.log('newFile.size:', newFile.size)
-            console.log('this.singleMax:', this.singleMax)
-            console.log('data.tooBig:', data.tooBig)
-            console.groupEnd();
+            // console.group('processFileInner()')
+            // console.log('data.size:', data.size)
+            // console.log('data.isPortrait:', data.isPortrait)
+            // console.log('newFile.size:', newFile.size)
+            // console.log('this.singleMax:', this.singleMax)
+            // console.log('data.tooBig:', data.tooBig)
+            // console.groupEnd();
 
             this.addFileToList(data);
             this.checkForIssues(true);
@@ -1099,12 +1118,14 @@ export default {
         </span>
       </button>
     </article>
+
     <article v-if="showConfirm === false && sending === true" :class="getDialogueClass()">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
         <p>Your files are being sent to the server</p>
       </header>
     </article>
+
     <article v-if="showConfirm === true" :class="getDialogueClass()">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
