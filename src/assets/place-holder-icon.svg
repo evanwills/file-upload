@@ -39,23 +39,36 @@
 	.text--error #file-meta text { fill: #fff; stroke: #000; stroke-width: 0.1; stroke-opacity: 0.7; }
 	#loading { display: none; }
 	.loading #loading { display: block; }
-	#loading circle {
+	#loading .loading-circle {
 		fill: #fff;
 		stroke: none;
 		animation-direction: alternate;
 		animation-duration: 2s;
 		animation-iteration-count: infinite;
-		animation-name: placeholde-slide;
+		animation-name: placeholder-slide;
+		animation-timing-function: ease-in-out;
+		<!-- animation-play-state: paused; -->
+	}
+	#loading .loading-circle circle {
+		animation-direction: alternate;
+		animation-duration: 2s;
+		animation-iteration-count: infinite;
+		animation-name: placeholder-zoom
 		animation-timing-function: ease-in-out;
 	}
-	#loading circle:nth-of-type(2) { animation-delay: 0.6s; }
-	#loading circle:nth-of-type(3) { animation-delay: 1.2s; }
-	#loading circle:nth-of-type(4) { animation-delay: 1.8s; }
+	#loading .loading-circle:nth-of-type(2) { animation-delay: 0.6s; }
+	#loading .loading-circle:nth-of-type(3) { animation-delay: 1.2s; }
+	#loading .loading-circle:nth-of-type(4) { animation-delay: 1.8s; }
 	#loading text { text-transform: uppercase; fill: #fff; font-size: 50px; }
 
-	@keyframes placeholde-slide {
+	@keyframes placeholder-slide {
 		0% { transform: translateX(0); }
-		100% { transform: translateX(134px); }
+		100% { transform: translateX(64%); }
+	}
+	@keyframes placeholder-zoom {
+		0% { transform: scale(0.7); }
+		50% { transform: scale(1.2); }
+		100% { transform: scale(0.7); }
 	}
 	</style>
 	<g class="loading">
@@ -71,10 +84,18 @@
 				<text transform="scale(0.26458333)" x="0" y="0">
 					<tspan x="125" y="167">Loading...</tspan>
 				</text>
-				<circle r="7.5" cx="38" cy="76" />
-				<circle r="7.5" cx="38" cy="105" />
-				<circle r="7.5" cx="38" cy="142" />
-				<circle r="7.5" cx="38" cy="171.5" />
+				<g class="loading-circle">
+					<circle r="7.5" cx="38" cy="76" />
+				</g>
+				<g class="loading-circle">
+					<circle r="7.5" cx="38" cy="105" />
+				</g>
+				<g class="loading-circle">
+					<circle r="7.5" cx="38" cy="142" />
+				</g>
+				<g class="loading-circle">
+					<circle r="7.5" cx="38" cy="171.5" />
+				</g>
 			</g>
 			<g id="page">
 				<path id="page-corner--edge" d="m 130,10.000001 v 70 h 70" />
