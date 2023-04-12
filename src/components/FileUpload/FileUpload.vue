@@ -1,6 +1,6 @@
 <script lang="ts">
 import  ImageBlobReduce from 'image-blob-reduce';
-
+import { ref } from 'vue';
 import { fileData, fileUploadState, replaceData } from './FileUpload.d';
 import { defaultTypes, getAllowedTypes, getFieldID, getFileExt, imgIsPortrait, isBadType, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
 import FileUploadImage from './FileUploadImage.vue';
@@ -118,6 +118,21 @@ export default {
     minFiles: { type: String, required: false, default: '1' },
 
     /**
+     * Whether or not to loop the carousel around if the user tries
+     * to focus beyond the limit of the carousel
+     *
+     * e.g. Prevent moving the focus right of the last item,
+     *      or left of the first item
+     *
+     * The default behaviour of the carousel is to loop back to the
+     * begining when moving the focus item to after the last item,
+     * or loop to the end when moving.
+     *
+     * @property {boolean} reorder
+     */
+    noloop: { type: Boolean, required: false, default: false },
+
+    /**
      * Whether or not the user can reorder files/images within the
      * list
      *
@@ -193,7 +208,7 @@ export default {
       confirmUpload: true,
       carouselOffset: 0,
       confirmText: '',
-      focusIndex: 0,
+      doAutofocus: true,
       full: false,
       genericTypeList: '',
       goodCount: 0,
@@ -205,6 +220,7 @@ export default {
       processingCount: 0,
       selected: null,
       selectedKey: -1,
+      selectingFiles: false,
       singleMax: 5242880,
       showConfirm: false,
       tooBig: false,
@@ -260,6 +276,27 @@ export default {
     },
 
     /**
+     * Handle the user closing the file selection dialogue and
+     * prevent "Esc" key press from closing the whole upload modal UI
+     *
+     * This is a hack to get around a race condition where, if the
+     * file upload dialogue is open and user clicks the "Esc" key,
+     * the FileUpload keyboard handling fires causing the whole
+     * FileUpload modal to close.
+     *
+     * By adding a half second delay, to setting selectingFiles to
+     * FALSE, the file upload dialogue can close while the main
+     * FileUpload modal stays open.
+     *
+     * @param event
+     */
+    assumeClosed: function (event: Event) : void {
+      if (this.selectingFiles === true) {
+        setTimeout(this.fixEscapeRace(), 500);
+      }
+    },
+
+    /**
      * Go through the list of selected files and check if there are
      * any issues posed by the group of files as a whole.
      */
@@ -278,7 +315,7 @@ export default {
         bad: this.badCount,
         full: this.full,
         tooBig: this.tooBig,
-        pos: this.focusIndex,
+        pos: this.selectedKey,
       };
 
       let bad = 0;
@@ -313,7 +350,7 @@ export default {
       }
 
       if (newPos > -1) {
-        this.focusIndex = newPos;
+        this.selectedKey = newPos;
       }
 
       this.canConfirm = (
@@ -329,7 +366,7 @@ export default {
           old.bad !== this.badCount ||
           old.tooBig !== this.tooBig ||
           old.full !== this.full ||
-          old.pos !== this.focusIndex
+          old.pos !== this.selectedKey
       ) {
         this.$forceUpdate();
       }
@@ -343,6 +380,13 @@ export default {
     },
 
     /**
+     * Move the focus file postion back one
+     */
+    decrement: function () : void {
+      this.updateSelected(this.selectedKey - 1);
+    },
+
+    /**
      * Delete selected file from the list of files user has selected
      * (and remove it from the file carousel).
      *
@@ -351,10 +395,44 @@ export default {
     deleteFile: function (fileName: string): void {
       this.uploadList = this.uploadList.filter((file : fileData) => file.name !== fileName);
 
+      this.selectingFiles = false;
       this.checkForIssues(true);
 
-      if (this.focusIndex >= this.uploadList.length) {
-        this.focusIndex = this.uploadList.length - 1;
+      if (this.selectedKey >= this.uploadList.length) {
+        this.selectedKey = this.uploadList.length - 1;
+      }
+    },
+
+    /**
+     * Handle the user opening the file input dialogue
+     *
+     * @param event
+     */
+    fileInputClick: function (event: Event) : void {
+      this.selectingFiles = true;
+    },
+
+    /**
+     * Handle when replace file input triggers file select dialogue
+     * to open or close
+     */
+    fileOpenToggle: function (event: boolean) : void {
+      if (event === true) {
+        this.selectingFiles = true;
+      } else {
+        if (this.selectingFiles === true) {
+          setTimeout(this.fixEscapeRace(), 500);
+        }
+      }
+    },
+
+    /**
+     * Get a callback function to pass to setTimeout()
+     */
+    fixEscapeRace: function () : Function {
+      const localContext = this;
+      return () : void => {
+        localContext.selectingFiles = false;
       }
     },
 
@@ -399,7 +477,7 @@ export default {
      * @returns Inline CSS for styling carousel
      */
     getCarouselStyle: function () : string {
-      return `--carousel-items: ${this.uploadList.length}; --carousel-pos: ${this.focusIndex};`;
+      return `--carousel-items: ${this.uploadList.length}; --carousel-pos: ${this.selectedKey};`;
     },
 
     /**
@@ -579,62 +657,77 @@ export default {
      * @param event
      */
     handleKeyUp: function (event: KeyboardEvent) : void {
-      const max = (this.uploadList.length - 1);
-      const oldKey = this.focusIndex;
-      let newKey = oldKey;
+      if (this.active === true) {
+        // Only process keyboard events while active.
 
-      if (this.showConfirm === false) {
-        switch (event.key) {
-          case 'ArrowRight':
-          case 'ArrowDown':
-            newKey = oldKey + 1;
-            break;
+        const max = (this.uploadList.length - 1);
+        const oldKey = this.selectedKey;
+        let newKey = oldKey;
 
-          case 'ArrowLeft':
-          case 'ArrowUp':
-            newKey = oldKey - 1;
-            break;
-
-          case 'PageUp':
-            newKey = (oldKey === 0)
-              ? max
-              : (oldKey > 10)
-                ? oldKey - 10
-                : 0;;
-            break;
-
-          case 'PageDown':
-            newKey = (oldKey === max)
-              ? 0
-              : (oldKey < (max - 10))
-                ? oldKey + 10
-                : max;
-            break;
-
-          case 'Home':
-            newKey = 0;
-            break;
-
-          case 'End':
-            newKey = max;
-            break;
-
-          case 'Escape':
-              this.handleCloseInner();
+        if (this.showConfirm === false) {
+          // Process keyboard events
+          switch (event.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+              this.increment();
               break;
+
+            case 'ArrowLeft':
+            case 'ArrowUp':
+              this.decrement();
+              break;
+
+            case 'PageUp':
+              newKey = (oldKey === 0)
+                ? max
+                : (oldKey > 10)
+                  ? oldKey - 10
+                  : 0;
+              this.updateSelected(newKey);
+              break;
+
+            case 'PageDown':
+              newKey = (oldKey === max)
+                ? 0
+                : (oldKey < (max - 10))
+                  ? oldKey + 10
+                  : max;
+              this.updateSelected(newKey);
+              break;
+
+            case 'Home':
+              this.updateSelected(0);
+              break;
+
+            case 'End':
+              this.updateSelected(max);
+              break;
+
+            case 'Escape':
+              if (this.selectingFiles === false) {
+                this.handleCloseInner();
+              }
+              break;
+          }
+        } else {
+          // Where in the confirmation UI.We need to do things a bit
+          // differently.
+
+          if (event.key === 'Escape' && this.selectingFiles === false) {
+            // They've pressed the Escape key. Cancel the confirmation
+            // UI so they can go back to what they were doing before.
+            this.showConfirm = false;
+            this.confirmText = '';
+          }
         }
       }
+    },
 
-      if (newKey < 0) {
-        newKey = max;
-      } else if (newKey > max) {
-        newKey = 0;
-      }
-
-      if (oldKey !== newKey) {
-        this.focusIndex = newKey;
-        this.$forceUpdate();
-      }
+    /**
+     * Move the focus file postion along one
+     */
+    increment: function () : void {
+      this.updateSelected(this.selectedKey + 1);
     },
 
     /**
@@ -651,6 +744,7 @@ export default {
           return true;
         }
       }
+
       return false;
     },
 
@@ -664,6 +758,7 @@ export default {
      */
     moveFileLeft: function (fileName: string): void {
       this.uploadList = moveFile(this.uploadList, fileName, -1);
+      this.decrement();
       this.checkForIssues();
     },
 
@@ -677,6 +772,7 @@ export default {
      */
     moveFileRight: function (fileName: string): void {
       this.uploadList = moveFile(this.uploadList, fileName, 1);
+      this.increment();
       this.checkForIssues();
     },
 
@@ -684,24 +780,14 @@ export default {
      * Move the focus image in the carousel one step to the right
      */
     next: function (): void {
-      if (this.focusIndex < (this.uploadList.length - 1)) {
-        this.focusIndex += 1;
-      } else {
-        // Wrap focus around to beginning
-        this.focusIndex = 0;
-      }
+      this.increment();
     },
 
     /**
      * Move the focus image in the carousel one step to the left
      */
     previous: function (): void {
-      if (this.focusIndex > 0) {
-        this.focusIndex -= 1;
-      } else {
-        // Wrap focus around to end
-        this.focusIndex = (this.uploadList.length - 1);
-      }
+      this.decrement();
     },
 
     /**
@@ -725,12 +811,13 @@ export default {
             .then(async (blob: Blob) => {
             // Convert image blob to file object
             const newFile = new File(
-            // Blob must be wrapped within array for file object
-            // constructor
-            [blob], file.name, {
-                type: blob.type,
-                lastModified: Date.now(),
-            });
+              // Blob must be wrapped within array for file object
+              // constructor
+              [blob], file.name, {
+                  type: blob.type,
+                  lastModified: Date.now(),
+              }
+            );
 
             data.ext = getFileExt(newFile);
             data.file = newFile;
@@ -739,14 +826,6 @@ export default {
             data.size = newFile.size;
             data.src = URL.createObjectURL(newFile);
             data.tooBig = newFile.size > this.singleMax;
-
-            console.group('processFileInner()')
-            console.log('data.size:', data.size)
-            console.log('data.isPortrait:', data.isPortrait)
-            console.log('newFile.size:', newFile.size)
-            console.log('this.singleMax:', this.singleMax)
-            console.log('data.tooBig:', data.tooBig)
-            console.groupEnd();
 
             this.addFileToList(data);
             this.checkForIssues(true);
@@ -793,7 +872,7 @@ export default {
       };
 
       this.addFileToList(tmp);
-      this.focusIndex = (this.uploadList.length - 1);
+      this.selectedKey = (this.uploadList.length - 1);
 
       this.processFileInner(tmp, file);
     },
@@ -806,6 +885,8 @@ export default {
     processSelectedFiles: function (e: Event): void {
       const files = (e.target as HTMLInputElement).files;
 
+      this.selectingFiles = false;
+
       // Put the focus at the start of the latest additional files
       const newIndex = (this.uploadList.length > 0)
         ? this.uploadList.length
@@ -817,10 +898,19 @@ export default {
         }
 
         // Make sure the focus is in the right place
-        this.focusIndex = newIndex;
+        this.selectedKey = newIndex;
+      }
+
+      if (this.doAutofocus === true) {
+        // const previousID = this.getID('previous');
+        this.$nextTick(function () {
+          this.doAutofocus = false;
+          if (typeof this.$refs.previousBtn !== 'undefined') {
+            (this.$refs.previousBtn as HTMLButtonElement).focus();
+          }
+        });
       }
     },
-
 
     /**
      * Find an old file in the list of selected files and replace it
@@ -876,23 +966,43 @@ export default {
       }
     },
 
-    updateSelected(oldKey: number, newKey: number, max: number) : boolean {
-      if (newKey < 0) {
-        newKey = 0;
-      } else if (newKey > max) {
-        newKey = max;
+    /**
+     * Handle when the focus item in the carousel changes
+     *
+     * @param oldKey Previus key for focused item
+     * @param newKey Key for newly focused item
+     * @param max Total number of items in the carousel.
+     */
+    updateSelected(newKey: number) : boolean {
+      const max = (this.uploadList.length - 1);
+      const oldKey = this.selectedKey;
+
+      let _newKey = newKey;
+
+      if (_newKey < 0) {
+        _newKey = (this.noloop === false)
+          ? max
+          : 0;
+      } else if (_newKey > max) {
+        _newKey = (this.noloop === false)
+          ? 0
+          : max;
       }
 
-      if (oldKey !== newKey) {
-        this.uploadList[oldKey].selected = false;
-        this.uploadList[newKey].selected = true;
+      if (oldKey !== _newKey) {
+        if (typeof this.uploadList[oldKey] !== 'undefined') {
+          this.uploadList[oldKey].selected = false;
+        }
 
-        this.selected = this.uploadList[newKey];
-        this.selectedKey = newKey;
+        this.uploadList[_newKey].selected = true;
+
+        this.selected = this.uploadList[_newKey];
+        this.selectedKey = _newKey;
         this.$forceUpdate();
 
         return true;
       }
+
       return false;
     },
   },
@@ -1012,8 +1122,10 @@ export default {
       </header>
       <main v-if="uploadList.length > 0" class="file-upload__carousel__wrap">
         <button v-if="(uploadList.length > 1)"
+                ref="previousBtn"
                 class="file-upload__carousel_btn file-upload__carousel_btn--previous"
                 accesskey="p"
+                :disabled="(noloop === true && selectedKey === 0)"
                 v-on:click="previous">
           <span class="visually-hidden">Previous</span>
         </button>
@@ -1032,7 +1144,7 @@ export default {
                               :file-type="file.type"
                               :ext="file.ext"
                               :is-bad-type="file.badType"
-                              :is-focused="focusIndex === index"
+                              :is-focused="selectedKey === index"
                               :is-portrait="file.isPortrait"
                               :is-ready="file.ready"
                               :is-surplus="file.surplus"
@@ -1042,6 +1154,7 @@ export default {
                               @replace="replaceFile"
                               @moveleft="moveFileLeft"
                               @moveright="moveFileRight"
+                              @fileOpen="fileOpenToggle($event)"
                               v-on:keyup="handleKeyUp($event)"></FileUploadImage>
             </li>
           </ul>
@@ -1049,6 +1162,7 @@ export default {
         <button v-if="(uploadList.length > 1)"
                 class="file-upload__carousel_btn file-upload__carousel_btn--next"
                 accesskey="n"
+                :disabled="(noloop === true && selectedKey === max)"
                 v-on:click="next">
           <span class="visually-hidden">Next</span>
         </button>
@@ -1062,7 +1176,10 @@ export default {
                    class="file-upload__input visually-hidden" :id="getID('main-input')"
                    accesskey="a"
                   :multiple="(max > 1)"
-                  :accept="accepted" v-on:change="processSelectedFiles" />
+                  :accept="accepted"
+                  v-on:change="processSelectedFiles"
+                  v-on:click="fileInputClick"
+                  v-on:focus="assumeClosed" />
           </label>
         </p>
         <p v-else-if="uploadList.length > max || badCount > 0"
@@ -1081,7 +1198,9 @@ export default {
                   :multiple="(max > 1 && (max - uploadList.length) > 1)"
                   :accept="accepted"
                   accesskey="a"
-                  v-on:change="processSelectedFiles" />
+                  v-on:change="processSelectedFiles"
+                  v-on:click="fileInputClick"
+                  v-on:focus="assumeClosed" />
           </label>
           <button v-if="canConfirm === true"
                   v-on:click="handleConfirm"
@@ -1099,12 +1218,14 @@ export default {
         </span>
       </button>
     </article>
+
     <article v-if="showConfirm === false && sending === true" :class="getDialogueClass()">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
         <p>Your files are being sent to the server</p>
       </header>
     </article>
+
     <article v-if="showConfirm === true" :class="getDialogueClass()">
       <header>
         <h2 class="file-upload__head">{{ label }}</h2>
@@ -1151,7 +1272,7 @@ export default {
   position: fixed;
   top: 50%;
   transform: translate(-50%, -50%) scale(0);
-  transition: transform ease-in-out 0.3s 0.2s, opacity ease-in-out 0.3s 0.2s;
+  transition: transform ease-in-out 0.3s 0.3s, opacity ease-in-out 0.3s 0.3s;
   width: 100%;
 }
 .file-upload__bg-close--active {
@@ -1183,13 +1304,15 @@ export default {
   text-align: left;
   top: 50%;
   transform: translate(-50%, -50%) scale(0);
-  transition: transform ease-in-out 0.3s, opacity ease-in-out 0.3s;
+  /* transition: transform cubic-bezier(.43,-0.42,.57,.9) 0.4s; */
+  transition: transform cubic-bezier(.43,-0.42,.57,.9) 0.4s, opacity ease-out 0.3s 0.1s;
   width: 30rem;
 }
 .file-upload__dialogue--active {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
-  transition: transform ease-in-out 0.3s 0.2s, opacity ease-in-out 0.3s 0.2s;
+  /* transition: transform cubic-bezier(.49,.2,.58,1.43) 0.4s 0.2s; */
+  transition: transform cubic-bezier(.49,.2,.58,1.43) 0.4s 0.3s, opacity ease-in 0.3s 0.2s;
 }
 .file-upload__dialogue--some {
   max-height: calc(100% - 4rem);
@@ -1329,39 +1452,58 @@ export default {
 
 .file-upload__carousel_btn {
   background-color: transparent;
-  border-radius: 50%;
+  bottom: 0;
   display: block;
   font-size: 0.5rem;
   height: 1.75rem;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1.75rem;
-  z-index: 20000;
-  transform-origin: 50% 50%;
-}
-.file-upload__carousel_btn::after {
+  height: 100%;
   position: absolute;
   top: 0;
-  left: 0;
+  width: calc(calc(100% - var(--file-upload-item-width)) / 2);
+  z-index: 20000;
+}
+.file-upload__carousel_btn:focus {
+  outline: none;
+}
+.file-upload__carousel_btn:hover::before,
+.file-upload__carousel_btn:focus::before {
+  border: none;
+  border-radius: 10rem;
+  display: block;
   content: '';
+  height: 2rem;
+  left: 50%;
+  outline: 0.2rem dotted #00b;
+  position: absolute;
+  top: 50%;
+  transform-origin: 50% 50%;
+  transform: translate(-50%, -50%);
+  width: 2rem;
+}
+.file-upload__carousel_btn::after {
   border: 0.3rem solid #0069d5;
-  width: 1rem;
-  height: 1rem;
   border-left: none;
   border-top: none;
+  display: block;
+  content: '';
+  transform-origin: 50% 50%;
+  top: 50%;
+  left: 50%;
+  width: 1rem;
+  height: 1rem;
+  position: absolute;
 }
 .file-upload__carousel_btn--next {
   right: 0;
 }
 .file-upload__carousel_btn--next::after {
-  transform: translate(-10%, 15%) rotate(-45deg);
+transform: translate(-60%, -50%) rotate(-45deg);
 }
 .file-upload__carousel_btn--previous {
   left: 0;
 }
 .file-upload__carousel_btn--previous::after {
-  transform: translate(40%, 15%) rotate(135deg);
+  transform: translate(-32%, -48%) rotate(135deg);
 }
 .file-upload__add-btn {
   background-color: #000;

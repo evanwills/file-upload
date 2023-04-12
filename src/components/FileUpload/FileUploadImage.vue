@@ -122,6 +122,7 @@ export default {
       alt: '',
       _ext: '',
       _fileName: '',
+      _fileOpen: false,
     }
   },
 
@@ -169,7 +170,7 @@ export default {
      *
      * @param e
      */
-    replaceClick: function (e: Event) : void {
+    replaceComplete: function (e: Event) : void {
       const files = (e.target as HTMLInputElement).files;
 
       if (typeof files !== null) {
@@ -181,6 +182,14 @@ export default {
           }
         );
       }
+    },
+
+    replaceClick : function (e: Event) : void {
+      this.$emit('fileOpen', true);
+    },
+
+    replaceFocus : function (e: Event) : void {
+      this.$emit('fileOpen', false);
     },
 
     /**
@@ -308,7 +317,9 @@ export default {
                accesskey="r"
                :id="getID('extra-input')"
                :accept="accepted"
-               v-on:change="replaceClick"
+               v-on:change="replaceComplete"
+               v-on:click="replaceClick"
+               v-on:focus="replaceFocus"
                :tabindex="(isFocused === false) ? -1 : undefined" />
       </label>
       <button v-if="total > 1 || isBad"
@@ -342,7 +353,7 @@ export default {
 .file-upload-img__img {
   flex-grow: 1;
   position: relative;
-  order: 2;
+  /* order: 2; */
   box-shadow: 0 0 0.75rem rgba(0, 0, 0, 0.2);
 }
 .file-upload-img__img > img,
@@ -377,7 +388,7 @@ export default {
   flex-wrap: wrap;
   justify-content: space-between;
   opacity: 0;
-  order: 1;
+  /* order: 1; */
   padding: 0 0 0.5rem;
   row-gap: 0.5rem;
   transition: opacity ease-in-out 0.3s;
@@ -396,6 +407,9 @@ export default {
   /* width: 3rem; */
   position: relative;
   height: 3rem;
+}
+.file-upload-img__btn:focus {
+  outline: 0.2rem dotted #00b;
 }
 .file-upload-img__btn::before {
   position: absolute;
@@ -427,7 +441,7 @@ export default {
   transform: translate(-50%, -75%);
 }
 .file-upload-img__btn--replace:focus-within {
-  outline: 0.2rem solid #00b;
+  outline: 0.2rem dotted #00b;
   /* outline-offset: 0.1rem; */
 }
 .file-upload-img__btn--replace:hover {
@@ -516,7 +530,7 @@ export default {
     order: 1;
   }
   .file-upload-img__btn-block {
-    order: 2;
+    /* order: 2; */
     padding: 0.5rem 0 0;
     column-gap: 1rem;
   }

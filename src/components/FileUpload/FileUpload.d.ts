@@ -163,6 +163,13 @@ export type fileUploadState = {
    */
   confirmUpload: boolean,
   /**
+   * Whether or not whether or not to set the focus on "Previous"
+   * button when the carousel opens
+   *
+   * @property {boolean} doAutofocus
+   */
+  doAutofocus: boolean,
+  /**
    * Whether or not the user has already selected the maximum number
    * of (valid) files they can
    *
@@ -214,12 +221,6 @@ export type fileUploadState = {
    */
   nextUID: number,
   /**
-   * The ID of the file in focus on the carousel
-   *
-   * @property {number} primnaryID
-   */
-  focusIndex: number,
-  /**
    * How many images are currently being processed
    *
    * @property {number} processingCount
@@ -245,6 +246,12 @@ export type fileUploadState = {
    * @property {number}
    */
   selectedKey: number,
+  /**
+   * Whether or not files are being selected
+   *
+   * @property {boolean}
+   */
+  selectingFiles: boolean,
   /**
    * Whether or not to render the confirmation screen
    *
@@ -285,6 +292,7 @@ export type fileUploadImgState = {
   alt: string,
   _ext: string,
   _fileName: string,
+  _fileOpen: boolean,
 }
 
 /**
