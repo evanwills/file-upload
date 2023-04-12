@@ -132,7 +132,7 @@ svg.file-upload-placeholder .placeholder-file-name {
 svg.file-upload-placeholder .placeholder-ext {
   font-size: 50px;
   text-transform: uppercase;
-  filter: drop-shadow(rgba(0, 0, 0, 0.5) 3px 3px 3px);
+  filter: drop-shadow(rgba(70, 70, 70, 0.7) -0.5px 1.5px 1px) drop-shadow(rgba(0, 0, 0, 0.5) 3px 3px 3px);
 }
 svg.file-upload-placeholder .placeholder-error-msg text {
   font-weight: bold;

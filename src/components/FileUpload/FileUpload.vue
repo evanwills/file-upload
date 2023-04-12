@@ -566,10 +566,13 @@ export default {
      */
     handleClose: function (event: Event) : void {
       const btn = event.target as HTMLButtonElement;
+      console.group('handleClose()');
 
       if (btn.disabled === false) {
+        console.log('about to try and close');
         this.handleCloseInner();
       }
+      console.groupEnd();
     },
 
     /**
@@ -586,13 +589,21 @@ export default {
      * @param event Click event
      */
     handleCloseInner: function () : void {
-      if (this.goodCount === 0 ||this.cancelConfirmText === '') {
+      console.group('handleClose()');
+      if (this.goodCount === 0 || this.cancelConfirmText === '') {
         this.toggleActive();
       } else {
         this.confirmText = this.cancelConfirmText;
         this.confirmUpload = false,
         this.showConfirm = true;
+        this.$forceUpdate();
+        this.$nextTick(function () {
+          if (typeof this.$refs.continueBtn !== 'undefined') {
+            (this.$refs.continueBtn as HTMLButtonElement).focus();
+          }
+        });
       }
+      console.groupEnd();
     },
 
     /**
@@ -657,6 +668,8 @@ export default {
      * @param event
      */
     handleKeyUp: function (event: KeyboardEvent) : void {
+      console.group('handleKeyUp()');
+      console.log('event.key:', event.key);
       if (this.active === true) {
         // Only process keyboard events while active.
 
@@ -721,6 +734,7 @@ export default {
           }
         }
       }
+      console.groupEnd();
     },
 
     /**
@@ -926,7 +940,8 @@ export default {
         if (this.uploadList[a].name === oldName) {
           ok = true;
 
-          this.uploadList[a].badType = (this.accepted.indexOf(newFile.type) === 0);
+          this.uploadList[a].badType = isBadType(newFile.type, this.allowedTypes);
+          this.uploadList[a].ext = getFileExt(newFile);
           this.uploadList[a].file = null;
           this.uploadList[a].lastModified = newFile.lastModified;
           this.uploadList[a].name = newFile.name;
@@ -934,7 +949,6 @@ export default {
           this.uploadList[a].size = newFile.size;
           this.uploadList[a].originalSize = newFile.size;
           this.uploadList[a].src = '';
-          this.uploadList[a].ext = getFileExt(newFile);
           this.uploadList[a].tooBig = newFile.size > this.singleMax;
           this.uploadList[a].type = newFile.type;
 
@@ -962,6 +976,7 @@ export default {
       this.confirmText = '';
 
       if (this.active === false) {
+        this.doAutofocus = true;
         this.uploadList = [];
       }
     },
@@ -1233,8 +1248,17 @@ export default {
       <p class="file-upload__confirm-txt">{{ confirmText }}</p>
       <footer>
         <p class="file-upload__confirm-btns">
-          <button v-if="confirmUpload === true" @click="handleConfirmInner" class="file-upload__confirm-btn__confirm">{{ confirmBtnTxt }}</button>
-          <button v-else @click="toggleActive" class="file-upload__confirm-btn__confirm">{{ cancelBtnTxt }}</button>
+          <button v-if="confirmUpload === true"
+                  ref="continueBtn"
+                  @click="handleConfirmInner"
+                  class="file-upload__confirm-btn__confirm">
+            {{ confirmBtnTxt }}
+          </button>
+          <button v-else @click="toggleActive"
+                  ref="continueBtn"
+                  class="file-upload__confirm-btn__confirm">
+            {{ cancelBtnTxt }}
+          </button>
           <button @click="handleUnconfirm" class="file-upload__confirm-btn__cancel">Cancel</button>
         </p>
       </footer>
@@ -1304,14 +1328,12 @@ export default {
   text-align: left;
   top: 50%;
   transform: translate(-50%, -50%) scale(0);
-  /* transition: transform cubic-bezier(.43,-0.42,.57,.9) 0.4s; */
   transition: transform cubic-bezier(.43,-0.42,.57,.9) 0.4s, opacity ease-out 0.3s 0.1s;
   width: 30rem;
 }
 .file-upload__dialogue--active {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
-  /* transition: transform cubic-bezier(.49,.2,.58,1.43) 0.4s 0.2s; */
   transition: transform cubic-bezier(.49,.2,.58,1.43) 0.4s 0.3s, opacity ease-in 0.3s 0.2s;
 }
 .file-upload__dialogue--some {
@@ -1435,7 +1457,8 @@ export default {
   margin: 0;
   padding: 0;
   transform: translateX(calc(-1 * calc(var(--file-upload-item-width) * var(--carousel-pos))));
-  transition: transform ease-in-out 0.3s;
+  /* transition: transform ease-in-out 0.3s; */
+  transition: transform cubic-bezier(.29,-0.06,.74,1.09) 0.3s;
   white-space: nowrap;
   width: calc(var(--file-upload-item-width) * var(--carousel-items));
 }
@@ -1457,28 +1480,36 @@ export default {
   font-size: 0.5rem;
   height: 1.75rem;
   height: 100%;
+  outline: none;
   position: absolute;
   top: 0;
   width: calc(calc(100% - var(--file-upload-item-width)) / 2);
   z-index: 20000;
 }
+.file-upload__carousel_btn:hover,
 .file-upload__carousel_btn:focus {
+  border: none;
   outline: none;
 }
-.file-upload__carousel_btn:hover::before,
-.file-upload__carousel_btn:focus::before {
+.file-upload__carousel_btn::before {
   border: none;
   border-radius: 10rem;
   display: block;
   content: '';
   height: 2rem;
-  left: 50%;
-  outline: 0.2rem dotted #00b;
+  outline-color: transparent;
+  /* outline-color: #00b; */
+  outline-style: dotted;
+  outline-width: 0.2rem;
   position: absolute;
   top: 50%;
   transform-origin: 50% 50%;
-  transform: translate(-50%, -50%);
+  transition: outline-color ease-in-out 0.1s;
   width: 2rem;
+}
+.file-upload__carousel_btn:hover::before,
+.file-upload__carousel_btn:focus::before {
+  outline-color: #00b;
 }
 .file-upload__carousel_btn::after {
   border: 0.3rem solid #0069d5;
@@ -1488,7 +1519,6 @@ export default {
   content: '';
   transform-origin: 50% 50%;
   top: 50%;
-  left: 50%;
   width: 1rem;
   height: 1rem;
   position: absolute;
@@ -1496,14 +1526,24 @@ export default {
 .file-upload__carousel_btn--next {
   right: 0;
 }
+.file-upload__carousel_btn--next::before {
+  right: 0.5rem;
+  transform: translateY(-50%);
+}
 .file-upload__carousel_btn--next::after {
-transform: translate(-60%, -50%) rotate(-45deg);
+  right: 1rem;
+  transform: translateY(-50%) rotate(-45deg);
 }
 .file-upload__carousel_btn--previous {
   left: 0;
 }
+.file-upload__carousel_btn--previous::before {
+  left: 0.5rem;
+  transform: translateY(-50%);
+}
 .file-upload__carousel_btn--previous::after {
-  transform: translate(-32%, -48%) rotate(135deg);
+  left: 1rem;
+  transform: translateY(-50%) rotate(135deg);
 }
 .file-upload__add-btn {
   background-color: #000;
@@ -1630,7 +1670,7 @@ transform: translate(-60%, -50%) rotate(-45deg);
   .file-upload__carousel {
     width: calc(var(--file-upload-item-width) * var(--carousel-items));
   }
-  .file-upload__carousel_btn {
+  /* .file-upload__carousel_btn {
     border: none;
     border-radius: 0;
     bottom: 0;
@@ -1680,7 +1720,7 @@ transform: translate(-60%, -50%) rotate(-45deg);
   .file-upload__carousel_btn--next::before{
     left: auto;
     right: 0.1rem;
-  }
+  } */
   .file-upload__add-btn {
     margin-left: 0.5rem;
     padding: 0.6em 1.2em;

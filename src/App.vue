@@ -11,7 +11,7 @@ function handleUpload (e : Event) {
 </script>
 
 <template>
-  <FileUpload label="Upload some documents" maxFiles="10" id="file-upload-1" helpTxt="This is some useful info on why you should upload files to our service" v-on:confirm-upload="handleUpload" reorder></FileUpload>
+  <FileUpload label="Upload some documents" maxFiles="10" id="file-upload-1" helpTxt="This is some useful info on why you should upload files to our service" v-on:confirm-upload="handleUpload" reorder cancel-confirm-text="Are you really sure you want to cancel?" upload-confirm-text="Those are some awesome files. Are you ready to send them?"></FileUpload>
 </template>
 
 <style scoped>

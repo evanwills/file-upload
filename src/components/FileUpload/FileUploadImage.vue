@@ -527,7 +527,7 @@ export default {
 @media screen and (min-width: 30rem) {
   .file-upload-img__img, .file-upload-img__placeholder {
     /* max-height: 20rem; */
-    order: 1;
+    /* order: 1; */
   }
   .file-upload-img__btn-block {
     /* order: 2; */
