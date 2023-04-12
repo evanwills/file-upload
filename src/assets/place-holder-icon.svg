@@ -1,42 +1,93 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg width="210mm" height="297mm" viewBox="0 0 210 297" version="1.1" xmlns="http://www.w3.org/2000/svg">
 	<style>
-	g { font-family:Verdana, Arial, Helvetica, sans-serif; }
+	g { font-family: Verdana, Arial, Helvetica, sans-serif; }
 	#file-meta text {
-		display:block;
-		fill:#000;
-		fill-opacity:1;
-		font-weight:bold;
-		stroke:none;
-		text-align:center;
-		text-anchor:middle;
+		display: block;
+		fill: #000;
+		fill-opacity: 1;
+		font-weight: bold;
+		stroke: none;
+		text-align: center;
+		text-anchor: middle;
 	}
-	#file-meta tspan { font-weight:bold; text-anchor:middle;  }
-	#file-name { font-size:9px; font-family:'Courier New', monospace; }
-	#ext { font-size:50px; text-transform: uppercase; }
+	#file-meta tspan {
+		font-weight: bold;
+		text-anchor: middle;
+	}
+	#file-name {
+		font-size: 9px;
+		font-family: 'Courier New', monospace;
+	}
+	#ext {
+		font-size: 50px;
+		text-transform: uppercase;
+		filter: drop-shadow(rgba(70, 70, 70, 0.7) -0.5px 1.5px 1px) drop-shadow(rgba(0, 0, 0, 0.5) 3px 3px 3px);
+	}
 	<!-- .error-msg { display: none; } -->
 	.error-msg text {
-		font-weight:bold;
-		font-size:60px;
-		font-family:Verdana, Arial, Helvetica, sans-serif;
-		text-align:start;
-		display:inline;
-		fill:#fff;
+		font-weight: bold;
+		font-size: 60px;
+		font-family: Verdana, Arial, Helvetica, sans-serif;
+		text-align: start;
+		display: inline;
+		fill: #fff;
 		stroke: #000;
 		stroke-width: 1;
 		stroke-opacity: 0.7;
-		stroke-dasharray:none;
+		stroke-dasharray: none;
 	}
-	.error-msg rect { display:inline; fill:#d60000; fill-opacity:0.7; stroke:none; }
-	#faux-text-block rect { fill:#1a1a1a; fill-opacity:1; stroke:none; }
-	#message-error { fill: #fff; font-size: 90px; stroke: #fff; }
-	#page path { stroke: #000; stroke-dasharray:none; stroke-opacity:1; }
-	#page-frame { fill:none; stroke-width:5; }
-	#page-corner { fill:#000000; stroke-width:2; fill-opacity:1; }
-	#page-corner--edge { display:inline; fill:none; stroke:#fff !important; stroke-width:4; stroke-dasharray:none;stroke-opacity:1; }
+	.error-msg rect {
+		display: inline;
+		fill: #d60000;
+		fill-opacity: 0.7;
+		stroke: none;
+	}
+	#faux-text-block rect {
+		fill: #1a1a1a;
+		fill-opacity: 1;
+		stroke: none;
+	}
+	#faux-text-block line {
+		stroke: #f00;
+		stroke-width: 0.5;
+		display: none;
+	}
+	#message-error {
+		fill: #fff;
+		font-size: 90px;
+		stroke: #fff;
+	}
+	#page path {
+		stroke: #000;
+		stroke-dasharray: none;
+		stroke-opacity: 1;
+	}
+	#page-frame {
+		fill: none;
+		stroke-width: 5;
+	}
+	#page-corner {
+		fill: #000000;
+		stroke-width: 2;
+		fill-opacity: 1;
+	}
+	#page-corner--edge {
+		display: inline;
+		fill: none;
+		stroke: #fff !important;
+		stroke-width: 4;
+		stroke-dasharray: none;
+		stroke-opacity: 1;
+	}
 	.error-msg { display: none; }
 	.error .error-msg { display: block; }
-	.text--error #file-meta text { fill: #fff; stroke: #000; stroke-width: 0.1; stroke-opacity: 0.7; }
+	.text--error #file-meta text {
+		fill: #fff;
+		stroke: #000;
+		stroke-width: 0.1;
+		stroke-opacity: 0.7;
+	}
 	#loading { display: none; }
 	.loading #loading { display: block; }
 	#loading circle {
@@ -45,17 +96,41 @@
 		animation-direction: alternate;
 		animation-duration: 2s;
 		animation-iteration-count: infinite;
-		animation-name: placeholde-slide;
+		animation-name: placeholder-slide;
 		animation-timing-function: ease-in-out;
+		/* filter: drop-shadow(rgba(255, 255, 100, 0.5) -1px 0px 3px);*/
 	}
 	#loading circle:nth-of-type(2) { animation-delay: 0.6s; }
 	#loading circle:nth-of-type(3) { animation-delay: 1.2s; }
 	#loading circle:nth-of-type(4) { animation-delay: 1.8s; }
-	#loading text { text-transform: uppercase; fill: #fff; font-size: 50px; }
+	#loading text {
+		text-transform: uppercase;
+		fill: #fff;
+		font-size: 50px;
+	}
+	#ext tspan { filter: url(#shadow); }
 
-	@keyframes placeholde-slide {
-		0% { transform: translateX(0); }
+	@keyframes placeholder-slide {
+		0% { transform: translateX(0px); }
 		100% { transform: translateX(134px); }
+	}
+	@keyframes placeholder-zoom {
+		0% { transform: scale(0.5); }
+		50% { transform: scale(1.1); }
+		100% { transform: scale(0.5); }
+	}
+	@keyframes placeholder-colour {
+		0% { fill: #fff; }
+		10% { fill: #ff8; }
+		20% { fill: #f80; }
+		30% { fill: #f00; }
+		40% { fill: #f80; }
+		50% { fill: #ff0; }
+		60% { fill: #8f8; }
+		70% { fill: #08f; }
+		80% { fill: #0ff; }
+		90% { fill: #08f; }
+		100% { fill: #00f; }
 	}
 	</style>
 	<g class="loading">
@@ -66,6 +141,7 @@
 				<rect width="154" height="20" x="28" y="95.5" />
 				<rect width="154" height="20" x="28" y="132" />
 				<rect width="154" height="20" x="28" y="161.5" />
+				<line x1="105" y1="0" x2="105" y2="297" />
 			</g>
 			<g id="loading">
 				<text transform="scale(0.26458333)" x="0" y="0">

@@ -132,6 +132,7 @@ svg.file-upload-placeholder .placeholder-file-name {
 svg.file-upload-placeholder .placeholder-ext {
   font-size: 50px;
   text-transform: uppercase;
+  filter: drop-shadow(rgba(0, 0, 0, 0.5) 3px 3px 3px);
 }
 svg.file-upload-placeholder .placeholder-error-msg text {
   font-weight: bold;
@@ -200,6 +201,7 @@ svg.file-upload-placeholder .placeholder-loading-indicator circle {
   animation-iteration-count: infinite;
   animation-name: placeholde-slide;
   animation-timing-function: ease-in-out;
+  /* filter: drop-shadow(rgba(255, 255, 100, 0.5) -1px 0px 3px); */
 }
 svg.file-upload-placeholder .placeholder-loading-indicator circle:nth-of-type(2) { animation-delay: 0.2s; }
 svg.file-upload-placeholder .placeholder-loading-indicator circle:nth-of-type(3) { animation-delay: 0.4s; }
@@ -220,7 +222,7 @@ svg.file-upload-placeholder--error .placeholder-laceholder-file-meta text {
   stroke-opacity: 0.7;
 }
 svg.file-upload-placeholder--loading .placeholder-loading-indicator {
-  display: block;
+  display: inline;
 }
 
 @keyframes placeholde-slide {
