@@ -1,10 +1,9 @@
 <script lang="ts">
-import  ImageBlobReduce from 'image-blob-reduce';
+import imageBlobReduce, { ImageBlobReduce } from 'image-blob-reduce';
 import { ref } from 'vue';
-import { fileData, fileUploadState, replaceData } from './FileUpload.d';
-import { defaultTypes, getAllowedTypes, getFieldID, getFileExt, imgIsPortrait, isBadType, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
+import { fileData, fileUploadState, replaceData } from '../../types/FileUpload.d';
+import { defaultTypes, getAllowedTypes, getFieldID, getFileExt, getImgBlobReduce, isBadType, moveFile, humanImplode, humanFileSizeToBytes } from './FileUpload.utils';
 import FileUploadImage from './FileUploadImage.vue';
-// import  ImageBlobReduce from '@types/image-blob-reduce';
 
 export default {
   props: {
@@ -60,6 +59,8 @@ export default {
      * @property {string} id
      */
     id: { type: String, required: true },
+
+    jpegLevel: { type: Number, required: false, default: 0 },
 
     /**
      * Label to (briefly) describe the purpose of the upload
@@ -213,6 +214,7 @@ export default {
       genericTypeList: '',
       goodCount: 0,
       humanTypeList: '',
+      imgReduce: null,
       min: 1,
       max: 1,
       maxPx: 1500,
@@ -819,9 +821,9 @@ export default {
     processFileInner: async function (data: fileData, file: File) {
       if (data.badType === false) {
         if (this.isImage(data.type)) {
-          const imgReduce = new ImageBlobReduce();
+          this.imgReduce = getImgBlobReduce(this.imgReduce, this.jpegLevel);
 
-          imgReduce.toBlob(file, { max: 1500 })
+          this.imgReduce.toBlob(file, { max: 1500 })
             .then(async (blob: Blob) => {
             // Convert image blob to file object
             const newFile = new File(

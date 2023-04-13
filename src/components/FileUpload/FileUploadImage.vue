@@ -1,6 +1,6 @@
 <script lang="ts">
 import { getFieldID } from './FileUpload.utils';
-import { fileUploadImgState } from './FileUpload';
+import { fileUploadImgState } from '../../types/FileUpload';
 import FileUploadPlaceholder from './FileUploadPlaceholder.vue'
 // import TmpComponent from './TmpComponent.vue';
 
@@ -525,12 +525,7 @@ export default {
 }
 
 @media screen and (min-width: 30rem) {
-  .file-upload-img__img, .file-upload-img__placeholder {
-    /* max-height: 20rem; */
-    /* order: 1; */
-  }
   .file-upload-img__btn-block {
-    /* order: 2; */
     padding: 0.5rem 0 0;
     column-gap: 1rem;
   }

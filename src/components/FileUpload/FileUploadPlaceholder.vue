@@ -50,7 +50,7 @@
   </svg>
 </template>
 <script lang="ts">
-import { svgData } from './FileUpload.d';
+import { svgData } from '../../types/FileUpload.d';
 
 export default {
   props: {

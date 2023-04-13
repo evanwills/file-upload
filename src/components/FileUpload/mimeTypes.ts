@@ -1,5 +1,5 @@
 
-import { mimeList } from './FileUpload.d';
+import { mimeList } from '../../types/FileUpload.d';
 
 
 /**

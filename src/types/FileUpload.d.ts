@@ -1,3 +1,6 @@
+import { ImageBlobReduce } from "image-blob-reduce"
+import { ImageBlobReduce } from "../../types/ImageBlobReduce.d"
+
 /**
  * Object for holding metadata about a file plus a File object (if
  * the file is OK to upload)
@@ -195,6 +198,12 @@ export type fileUploadState = {
    * @property {string} humanTypeList
    */
   humanTypeList: string,
+  /**
+   * Object used to reduce image file sizes
+   *
+   * @property {ImageBlobReduce|null} imgReduce
+   */
+  imgReduce: ImageBlobReduce|null,
   /**
    * Maximum number of files user may upload
    *

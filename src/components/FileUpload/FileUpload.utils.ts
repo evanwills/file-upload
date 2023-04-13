@@ -1,5 +1,8 @@
 import { fileTypes } from './mimeTypes';
-import { fileData, mimeType } from './FileUpload.d';
+import { fileData, mimeType } from '../../types/FileUpload.d';
+import { Env, ImageBlobReduce as ImgBlobReduce } from 'image-blob-reduce';
+import imageBlobReduce from '../../types/ImageBlobReduce.d';
+import { Pica } from '../../types/Pica.d';
 
 export const defaultTypes : mimeType[] = [
   fileTypes.png,
@@ -76,6 +79,37 @@ export const getFileExt = (file: File) : string => {
  */
 export const getFieldID = (id: string, suffix: string) : string => {
   return `${id}--${suffix}`;
+};
+
+/**
+ * Get singleton ImageBlobReduce object.
+ *
+ * If `jpegLevel` is greater than 0, add extra config to force
+ * output to JPEG compression level
+ *
+ * @returns an ImageBlobReduce object that's ready to use
+ */
+export const getImgBlobReduce = (
+  imgReduce : imageBlobReduce.ImageBlobReduce|null,
+  jpgLevel : number = 0
+) : imageBlobReduce.ImageBlobReduce => {
+  if (imgReduce !== null) {
+    return imgReduce;
+  }
+
+  const output = new ImageBlobReduce();
+
+  if (jpgLevel > 0) {
+    output._create_blob = async function (env: Env) {
+      return (this.pica as Pica).toBlob(env.out_canvas, 'image/jpeg', jpg)
+        .then(function (blob: Blob) {
+          env.out_blob = blob;
+          return env;
+        });
+    };
+  }
+
+  return output;
 };
 
 /**
