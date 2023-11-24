@@ -1,279 +1,3 @@
-<script lang="ts">
-import { getFieldID } from './FileUpload.utils';
-import { fileUploadImgState } from '../../types/FileUpload';
-import FileUploadPlaceholder from './FileUploadPlaceholder.vue'
-// import TmpComponent from './TmpComponent.vue';
-
-export default {
-  props: {
-    /**
-     * List of space separated MIME types for files user can upload
-     *
-     * @property {string} accepted
-     */
-    accepted: { type: String, required: true },
-    /**
-     * Whether or not user can move this file relative to its
-     * siblings
-     *
-     * @property {boolean} canMove
-     */
-    canMove: { type: Boolean, required: false, default: false },
-    /**
-     * Letters in file extension for this file.
-     *
-     * Used to indicate the file type for non image files or
-     * processing state for images.
-     *
-     * @property {string} ext
-     */
-    ext: { type: String, required: true },
-    /**
-     * ID for this component
-     *
-     * @property {string} id
-     */
-    id: { type: String, required: true },
-    /**
-     * Whether or not this file/image has an unacceptable file type
-     *
-     * @property {boolean} badType
-     */
-    isBadType: { type: Boolean, required: false, default: false },
-    /**
-     * Whether or not this component is the focused file/image in
-     * the file carousel
-     *
-     * @property {boolean} isFocused
-     */
-    isFocused: { type: Boolean, required: true },
-    /**
-     * Whether or not image in this component has a portrait aspect
-     * ratio.
-     *
-     * @property {boolean} isPortrait
-     */
-    isPortrait: { type: Boolean, required: true },
-    /**
-     * Whether or not this file is ready to be rendered
-     *
-     * @property {boolean} isReady
-     */
-    isReady: { type: Boolean, required: false },
-    /**
-     * Whether or not this file is surplus
-     *
-     * (i.e. the maximum number of good files has already been
-     * reached. This file may be good but there are already enough
-     * so it can't be included in the upload)
-     *
-     * @property {boolean} isSurplus
-     */
-    isSurplus: { type: Boolean, required: true },
-    /**
-     * Whether or not this file's size exceedes the maximum allowed
-     *
-     * @property
-     */
-    isTooBig: { type: Boolean, required: true },
-    /**
-     * Position of this file/image within the list of files/images
-     * user has selected for upload
-     *
-     * @property {number} pos
-     */
-    pos: { type: Number, required: true },
-    /**
-     * Total number of files/images in the list of files/images the
-     * user has selected for upload
-     */
-    total: { type: Number, required: true },
-    /**
-     * File size (in Bytes) for this file/image
-     *
-     * @property {number} fileSize
-     */
-    fileSize: { type: Number, required: true },
-    /**
-     * Data source URL for the image
-     * (empty string if image is not processed or file is not an image)
-     *
-     * @property {string} fileSrc
-     */
-    fileSrc: { type: String, required: true },
-    /**
-     * Human readable file type for image
-     *
-     * @property {string} fileType
-     */
-    fileType: { type: String, required: true },
-    /**
-     * File name of image/file
-     *
-     * @property {string} fileName
-     */
-    fileName: { type: String, required: true },
-  },
-
-  data: function () : fileUploadImgState {
-    return {
-      isBad: false,
-      wrapClass: '',
-      alt: '',
-      _ext: '',
-      _fileName: '',
-      _fileOpen: false,
-    }
-  },
-
-  components: { FileUploadPlaceholder },
-
-  methods: {
-    /**
-     * Removing this file from the list of files to be uploaded
-     *
-     * @param e
-     */
-    deleteClick: function (e: Event) : void {
-      const btn = (e.target as HTMLButtonElement);
-
-      this.$emit('delete', this.fileName);
-    },
-
-    /**
-     * Handle swapping this file's position with its left hand
-     * neighbour
-     *
-     * @param e
-     */
-    moveLeftClick: function (e: Event) : void {
-      const btn = (e.target as HTMLButtonElement);
-
-      this.$emit('moveleft', this.fileName);
-    },
-
-    /**
-     * Handle swapping this file's position with its right hand
-     * neighbour
-     *
-     * @param e
-     */
-    moveRightClick: function (e: Event) : void {
-      const btn = (e.target as HTMLButtonElement);
-
-      this.$emit('moveright', this.fileName);
-    },
-
-    /**
-     * Handle replacing the existing file with a newly selected file
-     * from user's file system
-     *
-     * @param e
-     */
-    replaceComplete: function (e: Event) : void {
-      const files = (e.target as HTMLInputElement).files;
-
-      if (typeof files !== null) {
-        this.$emit(
-          'replace',
-          {
-            oldName: this.fileName,
-            newFile: (files as FileList)[0],
-          }
-        );
-      }
-    },
-
-    replaceClick : function (e: Event) : void {
-      this.$emit('fileOpen', true);
-    },
-
-    replaceFocus : function (e: Event) : void {
-      this.$emit('fileOpen', false);
-    },
-
-    /**
-     * Handle user releasing a pressed keyboard key
-     *
-     * @param {KeyboardEvent} keyEvent
-     */
-    keyUpEvent: function (keyEvent : KeyboardEvent) : void {
-      this.$emit('keyup', keyEvent)
-    },
-
-    /**
-     * Get a unique ID to user as the value for a label's `for`
-     * attribute and an ID for the associated input field.
-     *
-     * @param suffix string to append to parent ID
-     *
-     * @returns a string to use as an input field ID
-     */
-    getID: function (suffix: string): string {
-        return getFieldID(this.id, suffix);
-    },
-
-    /**
-     * Get class names to use on element wrapping buttons
-     *
-     * @returns btn-block classes for button wrapper
-     */
-    getBtnBlockClass: function () : string {
-      const tmp = 'file-upload-img__btn-block';
-
-      return (this.isFocused)
-        ? `${tmp} ${tmp}--show`
-        : tmp;
-    },
-
-    /**
-     * Get class names to use on placeholder element
-     *
-     * @returns placeholder classes
-     */
-    getPlaceholderClass: function () : string {
-      const tmp = 'file-upload-img__placeholder';
-
-      return (this.isReady === false)
-        ? `${tmp} ${tmp}--processing`
-        : tmp;
-    },
-
-    /**
-     * Make the file name wrappable but inserting a zero-width space
-     * before any non alpha-numeric character
-     *
-     * @returns string with zero-width spaces added to help file
-     *          names wrap
-     */
-    makeWrapable: function () : string {
-      return this.fileName.replace(/(?=[^a-z0-9]+)/ig, '\u200B')
-    }
-  },
-
-  mounted: function () : void {
-    const tmp = 'file-upload-img';
-
-    if (this.isTooBig === true || this.isBadType === true) {
-      this.isBad = true;
-
-      this.wrapClass = `${tmp} ${tmp}--bad`;
-    } else if (this.isSurplus === true) {
-      this.wrapClass = `${tmp} ${tmp}--surplus`;
-    } else {
-      this.wrapClass = tmp;
-    }
-
-    this._ext = (this.isReady === false)
-      ? `Processing ${this.ext} image`
-      : this.ext;
-
-    this._fileName = this.fileName.replace(/([^a-z0-9]+)/ig, '$1&ZeroWidthSpace;')
-  },
-}
-
-</script>
-
 <template>
   <figure :class="wrapClass"
           v-on:keyup="keyUpEvent($event)">
@@ -295,10 +19,11 @@ export default {
         :file-name="fileName" />
     </div>
 
-    <span v-if="isReady || isBad" :class="getBtnBlockClass()">
+    <span v-if="isReady || isBad" :class="getBtnBlockClass">
       <button v-if="canMove === true && isBad === false && pos > 0"
               v-on:click="moveLeftClick"
               accesskey="b"
+              ref="moveLeftBtn"
               class="file-upload-img__btn file-upload-img__btn--move file-upload-img__btn--left"
               :tabindex="(isFocused === false) ? -1 : undefined">
         <span class="visually-hidden">Move left</span>
@@ -310,18 +35,27 @@ export default {
               :tabindex="(isFocused === false) ? -1 : undefined">
         <span class="visually-hidden">Move right</span>
       </button>
-      <label v-if="isSurplus === false" class="file-upload-img__btn file-upload-img__btn--replace">
+      <label
+        v-if="isSurplus === false && fromCamera === false"
+        class="file-upload-img__btn file-upload-img__btn--replace">
         <span class="visually-hidden">Replace</span>
         <input type="file"
                class="visually-hidden"
                accesskey="r"
                :id="getID('extra-input')"
                :accept="accepted"
-               v-on:change="replaceComplete"
+               v-on:change="replaceComplete($event)"
                v-on:click="replaceClick"
                v-on:focus="replaceFocus"
                :tabindex="(isFocused === false) ? -1 : undefined" />
       </label>
+      <WebCamera
+        v-else-if="isSurplus === false && fromCamera === true"
+        btn-txt=""
+        btn-txt-hidden="Replace"
+        btn-class="file-upload-img__btn file-upload-img__btn--replace"
+        use
+        v-on:usephoto="replaceFromCamera($event)" />
       <button v-if="total > 1 || isBad"
               v-on:click="deleteClick"
                accesskey="d"
@@ -332,6 +66,376 @@ export default {
     </span>
   </figure>
 </template>
+
+<script lang="ts" setup>
+import {
+  computed,
+  // defineEmits,
+  // defineProps,
+  // defineSlots,
+  onBeforeMount,
+  // onMounted,
+  // onUpdated,
+  ref,
+  // useSlots,
+} from 'vue';
+import { getFieldID } from './FileUpload.utils';
+import { fileUploadImgState } from '../../types/FileUpload.d';
+import FileUploadPlaceholder from './FileUploadPlaceholder.vue'
+import WebCamera from './WebCamera.vue';
+// import TmpComponent from './TmpComponent.vue';
+/* eslint vue/multi-word-component-names: off */
+
+
+// --------------------------------------------------
+// START: Emitted events
+
+const emit = defineEmits<{
+  (e: 'delete', value: string) : void,
+  (e: 'moveleft', value: string) : void,
+  (e: 'moveright', value: string) : void,
+  (e: 'replace', value: { oldName: string, newFile: File }) : void,
+  (e: 'fileOpen', value: boolean) : void,
+  (e: 'keyup', value: KeyboardEvent) : void,
+}>();
+
+//  END:  Emitted events
+// --------------------------------------------------
+// START: Properties/attributes
+
+const props = defineProps({
+  /**
+   * List of space separated MIME types for files user can upload
+   *
+   * @property {string} accepted
+   */
+  accepted: { type: String, required: true },
+
+  /**
+   * Whether or not user can move this file relative to its
+   * siblings
+   *
+   * @property {boolean} canMove
+   */
+  canMove: { type: Boolean, required: false, default: false },
+
+  /**
+   * Letters in file extension for this file.
+   *
+   * Used to indicate the file type for non image files or
+   * processing state for images.
+   *
+   * @property {string} ext
+   */
+  ext: { type: String, required: true },
+
+  /**
+   * File name of image/file
+   *
+   * @property {string} fileName
+   */
+  fileName: { type: String, required: true },
+
+  /**
+   * File size (in Bytes) for this file/image
+   *
+   * @property {number} fileSize
+   */
+  fileSize: { type: Number, required: true },
+
+  /**
+   * Data source URL for the image
+   * (empty string if image is not processed or file is not an image)
+   *
+   * @property {string} fileSrc
+   */
+  fileSrc: { type: String, required: true },
+
+  /**
+   * Human readable file type for image
+   *
+   * @property {string} fileType
+   */
+  fileType: { type: String, required: true },
+
+  /**
+   * Whether or not the file was created via the web using the
+   * device's camera
+   *
+   * @property {boolean} fromCamera
+   */
+  fromCamera: { type: Boolean, required: false, default: false },
+
+  /**
+   * ID for this component
+   *
+   * @property {string} id
+   */
+  id: { type: String, required: true },
+
+  /**
+   * Whether or not this file/image has an unacceptable file type
+   *
+   * @property {boolean} badType
+   */
+  isBadType: { type: Boolean, required: false, default: false },
+  /**
+   * Whether or not this component is the focused file/image in
+   * the file carousel
+   *
+   * @property {boolean} isFocused
+   */
+  isFocused: { type: Boolean, required: true },
+
+  /**
+   * Whether or not image in this component has a portrait aspect
+   * ratio.
+   *
+   * @property {boolean} isPortrait
+   */
+  isPortrait: { type: Boolean, required: true },
+
+  /**
+   * Whether or not this file is ready to be rendered
+   *
+   * @property {boolean} isReady
+   */
+  isReady: { type: Boolean, required: false },
+
+  /**
+   * Whether or not this file is surplus
+   *
+   * (i.e. the maximum number of good files has already been
+   * reached. This file may be good but there are already enough
+   * so it can't be included in the upload)
+   *
+   * @property {boolean} isSurplus
+   */
+  isSurplus: { type: Boolean, required: true },
+
+  /**
+   * Whether or not this file's size exceedes the maximum allowed
+   *
+   * @property
+   */
+  isTooBig: { type: Boolean, required: true },
+
+  /**
+   * Position of this file/image within the list of files/images
+   * user has selected for upload
+   *
+   * @property {number} pos
+   */
+  pos: { type: Number, required: true },
+
+  /**
+   * Total number of files/images in the list of files/images the
+   * user has selected for upload
+   */
+  total: { type: Number, required: true },
+});
+
+//  END:  Properties/attributes
+// --------------------------------------------------
+// START: Local state
+
+// const isBad = ref(false);
+// const wrapClass = ref('');
+const alt = ref('');
+// const _ext = ref('');
+// const _fileName = ref('');
+const _fileOpen = ref(false);
+
+//  END:  Local state
+// --------------------------------------------------
+// START: Computed properties
+
+/**
+ * Get class names to use on element wrapping buttons
+ *
+ * @returns btn-block classes for button wrapper
+ */
+const getBtnBlockClass = computed(() : string => {
+  const tmp = 'file-upload-img__btn-block';
+
+  return (props.isFocused)
+    ? `${tmp} ${tmp}--show`
+    : tmp;
+});
+
+/**
+ * Get class names to use on placeholder element
+ *
+ * @returns placeholder classes
+ */
+const getPlaceholderClass = computed(() : string => {
+  const tmp = 'file-upload-img__placeholder';
+
+  return (props.isReady === false)
+    ? `${tmp} ${tmp}--processing`
+    : tmp;
+});
+
+/**
+ * Make the file name wrappable but inserting a zero-width space
+ * before any non alpha-numeric character
+ *
+ * @returns string with zero-width spaces added to help file
+ *          names wrap
+ */
+const makeWrapable = computed(() : string => {
+  return props.fileName.replace(/(?=[^a-z0-9]+)/ig, '\u200B')
+});
+
+const isBad = computed(() => (props.isTooBig === true || props.isBadType === true));
+
+const wrapClass = computed(() => {
+  const tmp = 'file-upload-img';
+
+  if (isBad.value === true) {
+    return `${tmp} ${tmp}--bad`;
+  } else if (props.isSurplus === true) {
+    return `${tmp}  ${tmp}--surplus`;
+  }
+
+  return tmp;
+});
+
+const _fileName = computed(() => props.fileName.replace(/([^a-z0-9]+)/ig, '$1&ZeroWidthSpace;'));
+
+//  END:  Computed properties
+// --------------------------------------------------
+// START: Local methods
+
+/**
+ * Removing this file from the list of files to be uploaded
+ *
+ * @param e
+ */
+const deleteClick = (e: Event) : void => {
+  const btn = (e.target as HTMLButtonElement);
+
+  emit('delete', props.fileName);
+};
+
+/**
+ * Handle swapping this file's position with its left hand
+ * neighbour
+ *
+ * @param e
+ */
+const moveLeftClick = (e: Event) : void => {
+  const btn = (e.target as HTMLButtonElement);
+
+  emit('moveleft', props.fileName);
+};
+
+/**
+ * Handle swapping this file's position with its right hand
+ * neighbour
+ *
+ * @param e
+ */
+const moveRightClick = (e: Event) : void => {
+  const btn = (e.target as HTMLButtonElement);
+
+  emit('moveright', props.fileName);
+};
+
+/**
+ * Handle replacing the existing file with a newly selected file
+ * from user's file system
+ *
+ * @param e
+ */
+const replaceComplete = (e: Event) : void => {
+  const files = (e.target as HTMLInputElement).files;
+
+  if (typeof files !== null) {
+    emit(
+      'replace',
+      {
+        oldName: props.fileName,
+        newFile: (files as FileList)[0],
+      }
+    );
+  }
+};
+
+/**
+ * Handle replacing the existing file with a newly selected file
+ * from user's file system
+ *
+ * @param e
+ */
+const replaceFromCamera = (file: File) : void => {
+  if (typeof file !== null) {
+    emit(
+      'replace',
+      {
+        oldName: props.fileName,
+        newFile: file,
+      }
+    );
+  }
+};
+
+const replaceClick = (e: Event) : void => {
+  emit('fileOpen', true);
+};
+
+const replaceFocus = (e: Event) : void => {
+  emit('fileOpen', false);
+};
+
+/**
+ * Handle user releasing a pressed keyboard key
+ *
+ * @param {KeyboardEvent} keyEvent
+ */
+const keyUpEvent = (keyEvent : KeyboardEvent) : void => {
+  emit('keyup', keyEvent)
+};
+
+/**
+ * Get a unique ID to user as the value for a label's `for`
+ * attribute and an ID for the associated input field.
+ *
+ * @param suffix string to append to parent ID
+ *
+ * @returns a string to use as an input field ID
+ */
+const getID = (suffix: string) : string => {
+    return getFieldID(props.id, suffix);
+};
+
+//  END:  Local methods
+// --------------------------------------------------
+// START: Lifecycle methods
+
+onBeforeMount(() => {
+  // const tmp = 'file-upload-img';
+
+  // if (props.isTooBig === true || props.isBadType === true) {
+  //   isBad.value = true;
+
+  //   wrapClass.value = `${tmp} ${tmp}--bad`;
+  // } else if (props.isSurplus === true) {
+  //   wrapClass.value = `${tmp} ${tmp}--surplus`;
+  // } else {
+  //   wrapClass.value = tmp;
+  // }
+
+  // _ext.value = (props.isReady === false)
+  //   ? `Processing ${props.ext} image`
+  //   : props.ext;
+
+  // _fileName.value = props.fileName.replace(/([^a-z0-9]+)/ig, '$1&ZeroWidthSpace;')
+});
+
+//  END:  Lifecycle methods
+// --------------------------------------------------
+</script>
 
 <style>
 .file-upload-img {
@@ -525,7 +629,12 @@ export default {
 }
 
 @media screen and (min-width: 30rem) {
+  /* .file-upload-img__img, .file-upload-img__placeholder { */
+    /* max-height: 20rem; */
+    /* order: 1; */
+  /* } */
   .file-upload-img__btn-block {
+    /* order: 2; */
     padding: 0.5rem 0 0;
     column-gap: 1rem;
   }

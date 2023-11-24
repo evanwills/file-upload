@@ -26,6 +26,7 @@ declare namespace imageBlobReduce {
         toCanvas(blob: Blob, options?: ResizeOptions): Promise<HTMLCanvasElement>;
         before(methodName: MethodNames, callback: (env: Env) => Promise<Env>): void;
         after(methodName: MethodNames, callback: (env: Env) => Promise<Env>): void;
+        _create_blob(env: Env) : Env;
     }
 
     interface Options {

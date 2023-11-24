@@ -1,6 +1,6 @@
 import { fileTypes } from './mimeTypes';
 import { fileData, mimeType } from '../../types/FileUpload.d';
-import { Env, ImageBlobReduce as ImgBlobReduce } from 'image-blob-reduce';
+import imageReducer from 'image-blob-reduce';
 import imageBlobReduce from '../../types/ImageBlobReduce.d';
 import { Pica } from '../../types/Pica.d';
 
@@ -97,15 +97,18 @@ export const getImgBlobReduce = (
     return imgReduce;
   }
 
-  const output = new ImageBlobReduce();
+  const output = new imageReducer();
 
   if (jpgLevel > 0) {
-    output._create_blob = async function (env: Env) {
-      return (this.pica as Pica).toBlob(env.out_canvas, 'image/jpeg', jpg)
-        .then(function (blob: Blob) {
-          env.out_blob = blob;
-          return env;
-        });
+    output._create_blob = async function (env: imageBlobReduce.Env) {
+      return env.pica.toBlob(
+        env.out_canvas as HTMLCanvasElement,
+        'image/jpeg',
+        jpgLevel,
+      ).then(function (blob: Blob) {
+        env.out_blob = blob;
+        return env;
+      });
     };
   }
 

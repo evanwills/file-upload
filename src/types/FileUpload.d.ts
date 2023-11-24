@@ -27,6 +27,12 @@ export type fileData = {
    */
   file: File|null,
   /**
+   * Whether or not the file came from device camera
+   *
+   * @property {boolean}
+   */
+  fromCamera: boolean,
+  /**
    * Position within the list of selected files
    *
    * @property {number} id
@@ -162,7 +168,7 @@ export type fileUploadState = {
    * Whether or not the confirmation screen is for confirming upload
    * or confirming abandonment of upload
    *
-   * @property {boolean} full
+   * @property {boolean} confirmUpload
    */
   confirmUpload: boolean,
   /**
@@ -189,7 +195,7 @@ export type fileUploadState = {
    * Number of valid files user has selected
    * (files that are small enough and of the right type)
    *
-   * @property {number} badCount
+   * @property {number} goodCount
    */
   goodCount: number,
   /**
@@ -226,7 +232,7 @@ export type fileUploadState = {
   /**
    * Unique ID for files (is incremented each time a file is selected)
    *
-   * @property {number} uid
+   * @property {number} nextUID
    */
   nextUID: number,
   /**
@@ -236,29 +242,23 @@ export type fileUploadState = {
    */
   processingCount: number,
   /**
-   * List of files user has selected to upload
-   *
-   * @property {fileData[]} uploadList
-   */
-  uploadList: fileData[],
-  /**
    * The object representing the file currently in prime position
    * in the carousel
    *
-   * @property {fileData|null}
+   * @property {fileData|null} selected
    */
   selected: fileData | null,
   /**
    * The index of the file currently in prime position in the
    * carousel array.
    *
-   * @property {number}
+   * @property {number} selectedKey
    */
   selectedKey: number,
   /**
    * Whether or not files are being selected
    *
-   * @property {boolean}
+   * @property {boolean} selectingFiles
    */
   selectingFiles: boolean,
   /**
@@ -293,6 +293,12 @@ export type fileUploadState = {
    * @property {string} uploadHelp
    */
   uploadHelp: string,
+  /**
+   * List of files user has selected to upload
+   *
+   * @property {fileData[]} uploadList
+   */
+  uploadList: fileData[],
 }
 
 export type fileUploadImgState = {
