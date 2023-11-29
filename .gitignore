@@ -1,31 +1,50 @@
-# Logs
-logs
-*.log
+.DS_Store
+node_modules
+package-lock.json
+/dist
+/tmp
+
+*.bak
+*.tsf-starters
+*.vite-running
+*.dev.*
+*.master.*
+*.new.*
+*.old.*
+*.original.*
+*.sit.*
+*.tmp.*
+.vite
+
+# Files that contain secure info
+ftp-up.txt
+ftp-mkdir.txt
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
 .idea
-.DS_Store
+.vscode
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-public/vite.svg
-
-tmp/*
+*.code-workspace
 *.bak
-*.tmp.*
+package-lock.json
+public/vite.svg
+*.vite*
+*.log
+*.sh
 *.old.*
-..vite-running
+tmp/
+*.patch

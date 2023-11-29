@@ -1,7 +1,3 @@
-
-import { mimeList } from '../../types/FileUpload.d';
-
-
 /**
  * List of possible acceptible file types user can upload
  *
@@ -12,7 +8,7 @@ import { mimeList } from '../../types/FileUpload.d';
  *
  * @var {object} fileTypes
  */
-export const fileTypes : mimeList = {
+export default {
   png: {
     ext: 'png',
     mime: 'image/png',
@@ -224,4 +220,4 @@ export const fileTypes : mimeList = {
     name: 'Excel',
     type: 'document',
   },
-}
+};

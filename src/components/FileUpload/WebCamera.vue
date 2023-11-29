@@ -3,6 +3,7 @@
     :class="btnClassName"
     type="button"
     v-on:click="handleOpenCamera">
+    <span v-if="btnIcon !== ''" class="material-icons">autorenew</span>
     {{ btnTxt }}
     <span
       v-if="btnTxtHidden !== ''"
@@ -25,15 +26,19 @@
           ref="videoEl"
           v-on:handleCanplay="handleCanPlay()">Video stream not available.</video>
         <p class="camera-dialogue__btn-wrap">
-          <button id="startbutton" v-on:click="handleTakePhoto()">Capture</button>
+          <button
+            class="file-upload__btn"
+            type="button"
+            v-on:click="handleTakePhoto()">Capture</button>
         </p>
       </div>
       <div v-show="captured === true" class="output">
         <canvas
+          class="file-upload__btn"
           :height="vHeight"
           ref="canvas"
           style="display:none;"
-          :width="vWidth" ></canvas>
+          :width="vWidth"></canvas>
         <img
           class="camera-dialogue__video"
           id="photo"
@@ -41,11 +46,19 @@
           alt="The screen capture will appear in this box."
           ref="imgEl" />
         <p class="camera-dialogue__btn-wrap">
-          <button id="retakebutton" v-on:click="handleRetakePhoto()">
+          <button
+            class="file-upload__btn"
+            type="button"
+            v-on:click="handleRetakePhoto()">
+            <!-- <span class="material-icons">autorenew</span> -->
+
             Retake
             <span class="visually-hidden">photo</span>
           </button>
-          <button id="usebutton" v-on:click="handleUsePhoto()">
+          <button
+            class="file-upload__btn"
+            type="button"
+            v-on:click="handleUsePhoto()">
             Use
             <span class="visually-hidden">photo</span>
           </button>
@@ -54,6 +67,7 @@
     </div>
     <button
       class="camera-dialogue__main-close"
+      type="button"
       v-on:click="handleCloseDialogue(true)">
       <span class="visually-hidden">
         Close camera
@@ -62,18 +76,17 @@
   </dialog>
 </template>
 
-<script lang="ts" setup>
+<script setup>
+// We are using the video element without any audio so there's no
+// need for a captions track
+/* eslint vuejs-accessibility/media-has-caption: off */
 import { computed, ref } from 'vue';
-import type { Ref } from 'vue';
 import LoadingSpinner from '../LoadingSpinner.vue';
 
 // --------------------------------------------------
 // START: Emitted events
 
-const emit = defineEmits<{
-  (e: 'close', value: boolean ) : void,
-  (e: 'usephoto', value: File ) : void,
-}>();
+const emit = defineEmits(['capturing', 'usephoto']);
 
 //  END:  Emitted events
 // --------------------------------------------------
@@ -87,6 +100,8 @@ const props = defineProps({
   btnClass: { type: String, required: false, default: '' },
   btnTxt: { type: String, required: false, default: 'Take a photo' },
   btnTxtHidden: { type: String, required: false, default: '' },
+  btnIcon: { type: String, required: false, default: '' },
+  fileNamePrefix: { type: String, required: false, default: '' },
 });
 
 //  END:  Properties/attributes
@@ -100,64 +115,38 @@ const mediaConstraints = {
   //   width: { ideal: 1000 },
   //   height: { ideal: 1500 },
   // },
-}
+};
 
-const isOpen : Ref<boolean> = ref(false);
-const vWidth : Ref<number> = ref(0);
-const vHeight : Ref<number> = ref(0);
-const streaming : Ref<boolean> = ref(false);
-const resizing : Ref<number> = ref(-1);
-const captured : Ref<boolean> = ref(false);
-const photo : Ref<string> = ref('');
-const startInit : Ref<boolean> = ref(true);
+const isOpen = ref(false);
+const vWidth = ref(0);
+const vHeight = ref(0);
+const streaming = ref(false);
+const resizing = ref(-1);
+const captured = ref(false);
+const photo = ref('');
+const startInit = ref(true);
 
-const videoEl : Ref<HTMLVideoElement|null> = ref(null);
-const imgEl : Ref<HTMLImageElement|null> = ref(null);
-const canvas : Ref<HTMLCanvasElement|null> = ref(null);
-const cameraui : Ref<HTMLDialogElement|null> = ref(null);
+const videoEl = ref(null);
+const imgEl = ref(null);
+const canvas = ref(null);
+const cameraui = ref(null);
+const errorMsg = ref('');
 
 //  END:  Local state
 // --------------------------------------------------
 // START: Computed properties
 
-const btnClassName = computed(() : string|undefined => { // eslint-disable:
+const btnClassName = computed(() => { // eslint-disable-line arrow-body-style
+  const tmp = 'file-upload__';
+
   return (props.btnClass.trim() !== '')
-    ? props.btnClass
-    : undefined;
+    ? `${tmp}btn ${props.btnClass}`
+    : `${tmp}btn ${tmp}label`;
 });
 
 //  END:  Computed properties
 // --------------------------------------------------
 // START: Local methods
-
-const dialogueCloseInner = () : void => {
-  streaming.value = false;
-  captured.value = false;
-  photo.value = '';
-  startInit.value = true;
-  isOpen.value = false;
-
-  if (videoEl.value !== null && videoEl.value.srcObject !== null) {
-    (videoEl.value.srcObject as MediaStream).getTracks().forEach(function(track) {
-      track.stop();
-    });
-  }
-
-  if (typeof window.screen !== 'undefined' && typeof window.screen.orientation !== 'undefined') {
-    window.screen.orientation.removeEventListener('orientationchange', setImgSize);
-  }
-};
-
-const setImgSize = () => {
-  if (resizing.value === -1 && videoEl.value !== null) {
-    if (videoEl.value.videoWidth === 0 || videoEl.value.videoHeight === 0) {
-      resizing.value = setTimeout(setImgSizeInner, 500);
-    } else {
-      setImgSizeInner();
-    }
-  }
-};
-
 
 const setImgSizeInner = () => {
   if (videoEl.value !== null) {
@@ -182,9 +171,42 @@ const setImgSizeInner = () => {
     resizing.value = -1;
   }
 
+  if (typeof window.screen !== 'undefined' && typeof window.screen.orientation !== 'undefined') {
+    // eslint-disable-next-line no-use-before-define
+    window.screen.orientation.removeEventListener('orientationchange', setImgSize);
+  }
 };
 
-const initCamera = () : void => {
+const setImgSize = () => {
+  if (resizing.value === -1 && videoEl.value !== null) {
+    if (videoEl.value.videoWidth === 0 || videoEl.value.videoHeight === 0) {
+      resizing.value = setTimeout(setImgSizeInner, 500);
+    } else {
+      setImgSizeInner();
+    }
+  }
+};
+
+const dialogueCloseInner = () => {
+  streaming.value = false;
+  captured.value = false;
+  photo.value = '';
+  startInit.value = true;
+  isOpen.value = false;
+  errorMsg.value = '';
+
+  if (videoEl.value !== null && videoEl.value.srcObject !== null) {
+    videoEl.value.srcObject.getTracks().forEach((track) => {
+      track.stop();
+    });
+  }
+
+  if (typeof window.screen !== 'undefined' && typeof window.screen.orientation !== 'undefined') {
+    window.screen.orientation.removeEventListener('orientationchange', setImgSize);
+  }
+};
+
+const initCamera = () => {
   if (props.use === true && isOpen.value === true && startInit.value === true) {
     startInit.value = false;
     if (typeof window.screen !== 'undefined' && typeof window.screen.orientation !== 'undefined') {
@@ -192,7 +214,7 @@ const initCamera = () : void => {
     }
     navigator.mediaDevices
       .getUserMedia(mediaConstraints)
-      .then((stream : MediaStream) => {
+      .then((stream) => {
         if (videoEl.value !== null) {
           streaming.value = true;
           videoEl.value.srcObject = stream;
@@ -200,7 +222,9 @@ const initCamera = () : void => {
           setImgSize();
         }
       }).catch((error) => {
+        console.log('error:', error);
         console.error('Could not use camera:', error);
+        errorMsg.value = `Could not use camera: <strong>${error.toString().replace(/^.*?: /, '')}</strong>`;
       });
   }
 };
@@ -217,16 +241,17 @@ const handleCanPlay = () => {
   }
 };
 
-const handleCloseDialogue = (close : boolean) => {
+const handleCloseDialogue = (close) => {
   dialogueCloseInner();
   if (close === true && cameraui.value !== null) {
     cameraui.value.close();
+    emit('capturing', false);
   }
 };
 
 const handleClearPhoto = () => {
   if (canvas.value !== null) {
-    const context : CanvasRenderingContext2D|null = canvas.value.getContext("2d");
+    const context = canvas.value.getContext('2d');
 
     if (context !== null && videoEl.value !== null) {
       photo.value = '';
@@ -236,17 +261,19 @@ const handleClearPhoto = () => {
 };
 
 const handleOpenCamera = () => {
-  isOpen.value = true
+  isOpen.value = true;
+
+  emit('capturing', true);
 
   if (cameraui.value !== null) {
     initCamera();
     cameraui.value.showModal();
   }
-}
+};
 
 const handleTakePhoto = () => {
   if (canvas.value !== null) {
-    const context : CanvasRenderingContext2D|null = canvas.value.getContext("2d");
+    const context = canvas.value.getContext('2d');
 
     if (context !== null && videoEl.value !== null) {
       if (vWidth.value && vHeight.value) {
@@ -281,7 +308,7 @@ const handleUsePhoto = () => {
       blobBits.push(blobBin.charCodeAt(a));
     }
 
-    let fileName = props.prefix.trim().replace(/[^a-z0-9\-]+/ig, '-').replace(/^-+|-+$/g, '');
+    let fileName = props.prefix.trim().replace(/[^\-a-z0-9]+/ig, '-').replace(/^-+|-+$/g, '');
 
     if (fileName !== '') {
       fileName += '__';
@@ -298,7 +325,7 @@ const handleUsePhoto = () => {
       new File(
         [new Uint8Array(blobBits)],
         fileName,
-        { type: 'image/png' }
+        { type: 'image/png' },
       ),
     );
   }
@@ -309,7 +336,6 @@ const handleUsePhoto = () => {
 
 //  END:  Local methods
 // --------------------------------------------------
-
 
 // onBeforeMount(() => {
 // });

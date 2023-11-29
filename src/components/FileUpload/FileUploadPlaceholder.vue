@@ -1,58 +1,60 @@
 <template>
   <svg height="100%" viewBox="0 0 210 297" version="1.1" xmlns="http://www.w3.org/2000/svg" :class="stateClass">
-      <g>
-        <g class="placeholder-faux-text-block">
-          <rect width="120" height="22" x="28" y="28" />
-          <rect width="154" height="20" x="28" y="66" />
-          <rect width="154" height="20" x="28" y="95.5" />
-          <rect width="154" height="20" x="28" y="132" />
-          <rect width="154" height="20" x="28" y="161.5" />
-        </g>
-        <g class="placeholder-loading-indicator">
-          <text transform="scale(0.26458333)" x="0" y="0">
-            <tspan x="125" y="167">Resizing...</tspan>
-          </text>
-          <circle r="7.5" cx="38" cy="76" />
-          <circle r="7.5" cx="38" cy="105" />
-          <circle r="7.5" cx="38" cy="142" />
-          <circle r="7.5" cx="38" cy="171.5" />
-        </g>
-        <g class="placeholder-page">
-				  <path class="placeholder-page-corner-edge" d="m 130,10.000001 v 70 h 70" />
-          <path class="placeholder-page-frame" d="m 10,10.132292 120,-0.132291 70,70 0,206.999969 H 10 Z" />
-          <path class="placeholder-page-corner" d="m 130,10 c 19.12159,19.057535 31.0578,31.0578 70,70 h -70 z" />
-        </g>
+    <g>
+      <g class="placeholder-faux-text-block">
+        <rect width="120" height="22" x="28" y="28" />
+        <rect width="154" height="20" x="28" y="66" />
+        <rect width="154" height="20" x="28" y="95.5" />
+        <rect width="154" height="20" x="28" y="132" />
+        <rect width="154" height="20" x="28" y="161.5" />
       </g>
-      <g>
-        <g v-if="errorCount > 0" class="placeholder-error-msg" >
-          <rect width="210" height="297" x="-1.7763568e-15" y="-1.7763568e-15" />
-          <text transform="scale(0.26458333)" class="placeholder-message-error" x="0" y="0">
-            <tspan x="120" y="170">Error</tspan>
-          </text>
-          <text transform="scale(0.26458333)" x="0" y="0">
-            <tspan x="120" y="310">{{ error1a }}</tspan>
-            <tspan x="120" y="421">{{ error1b }}.</tspan>
-          </text>
-          <text v-if="errorCount > 1" transform="scale(0.26458333)" x="-262.33609" y="0">
-            <tspan x="120" y="559">{{ error2a }}</tspan>
-            <tspan x="120" y="670">{{ error2b }}.</tspan>
-          </text>
-        </g>
-        <g class="placeholder-file-meta">
-          <text class="placeholder-ext" x="105" y="242">
-            <tspan x="105" y="242">.{{ ext }}</tspan>
-          </text>
-          <text class="placeholder-file-name" x="105" y="268">
-            <tspan x="105" y="268">{{ fileName }}</tspan>
-          </text>
-        </g>
+      <g class="placeholder-loading-indicator">
+        <text transform="scale(0.26458333)" x="0" y="0">
+          <tspan x="125" y="167">Resizing...</tspan>
+        </text>
+        <circle r="7.5" cx="38" cy="76" />
+        <circle r="7.5" cx="38" cy="105" />
+        <circle r="7.5" cx="38" cy="142" />
+        <circle r="7.5" cx="38" cy="171.5" />
       </g>
+      <g class="placeholder-page">
+        <path class="placeholder-page-corner-edge" d="m 130,10.000001 v 70 h 70" />
+        <path
+          class="placeholder-page-frame"
+          d="m 10,10.132292 120,-0.132291 70,70 0,206.999969 H 10 Z" />
+        <path
+          class="placeholder-page-corner"
+          d="m 130,10 c 19.12159,19.057535 31.0578,31.0578 70,70 h -70 z" />
+      </g>
+    </g>
+    <g>
+      <g v-if="errorCount > 0" class="placeholder-error-msg">
+        <rect width="210" height="297" x="-1.7763568e-15" y="-1.7763568e-15" />
+        <text transform="scale(0.26458333)" class="placeholder-message-error" x="0" y="0">
+          <tspan x="120" y="170">Error</tspan>
+        </text>
+        <text transform="scale(0.26458333)" x="0" y="0">
+          <tspan x="120" y="310">{{ error1a }}</tspan>
+          <tspan x="120" y="421">{{ error1b }}.</tspan>
+        </text>
+        <text v-if="errorCount > 1" transform="scale(0.26458333)" x="-262.33609" y="0">
+          <tspan x="120" y="559">{{ error2a }}</tspan>
+          <tspan x="120" y="670">{{ error2b }}.</tspan>
+        </text>
+      </g>
+      <g class="placeholder-file-meta">
+        <text class="placeholder-ext" x="105" y="242">
+          <tspan x="105" y="242">.{{ ext }}</tspan>
+        </text>
+        <text class="placeholder-file-name" x="105" y="268">
+          <tspan x="105" y="268">{{ fileName }}</tspan>
+        </text>
+      </g>
+    </g>
   </svg>
 </template>
-<script lang="ts" setup>
+<script setup>
 import { computed, onBeforeMount, ref } from 'vue';
-import type { Ref } from 'vue';
-// import { svgData } from '../../types/FileUpload.d';
 
 // --------------------------------------------------
 // START: Properties/attributes
@@ -69,33 +71,35 @@ const props = defineProps({
 // --------------------------------------------------
 // START: Local state
 
-const errorCount : Ref<number> = ref(0);
-const error1a : Ref<string> = ref('');
-const error1b : Ref<string> = ref('');
-const error2a : Ref<string> = ref('');
-const error2b : Ref<string> = ref('');
+const errorCount = ref(0);
+const error1a = ref('');
+const error1b = ref('');
+const error2a = ref('');
+const error2b = ref('');
 
 //  END:  Local state
 // --------------------------------------------------
 // START: Local methods
 
-const stateClass = computed(() : string => {
-  const tmp = 'file-upload-placeholder'
+const stateClass = computed(() => {
+  const tmp = 'file-upload-placeholder';
 
   if (props.tooLarge || props.isBad) {
     return `${tmp} ${tmp}--error`;
-  } else if (props.loading) {
-    return `${tmp} ${tmp}--loading`;
-  } else {
-    return tmp;
   }
+
+  if (props.loading) {
+    return `${tmp} ${tmp}--loading`;
+  }
+
+  return tmp;
 });
 
 //  END:  Local methods
 // --------------------------------------------------
 // START: Lifecycle methods
 
-onBeforeMount(() : void => {
+onBeforeMount(() => {
   errorCount.value = 0;
 
   if (props.isBad) {
