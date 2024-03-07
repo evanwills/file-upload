@@ -1,16 +1,16 @@
-import { fileTypes } from './mimeTypes';
-import { fileData, mimeType } from '../../types/FileUpload.d';
+import mimeTypes from './mimeTypes';
+import { TFileData, TMimeType } from '../../types/FileUpload.d';
 import imageReducer from 'image-blob-reduce';
 import imageBlobReduce from '../../types/ImageBlobReduce.d';
 import { Pica } from '../../types/Pica.d';
 
-export const defaultTypes : mimeType[] = [
-  fileTypes.png,
-  fileTypes.jpg,
-  fileTypes.webp,
-  fileTypes.pdf,
-  fileTypes.docx,
-  fileTypes.doc,
+export const defaultTypes : TMimeType[] = [
+  mimeTypes.png,
+  mimeTypes.jpg,
+  mimeTypes.webp,
+  mimeTypes.pdf,
+  mimeTypes.docx,
+  mimeTypes.doc,
 ];
 
 /**
@@ -20,9 +20,9 @@ export const defaultTypes : mimeType[] = [
  *
  * @returns List of allowed file types user can upload
  */
-export const getAllowedTypes = (types: string) : mimeType[] => {
+export const getAllowedTypes = (types: string) : TMimeType[] => {
   const good : string[] = [];
-  const output : mimeType[] = [];
+  const output : TMimeType[] = [];
   const bad : string[] = [];
   const typeList = types.replace(/[\t\n\r\s :;|,]+/g, ' ').trim().split(' ');
 
@@ -30,10 +30,10 @@ export const getAllowedTypes = (types: string) : mimeType[] => {
     for (let a = 0; a < typeList.length; a += 1) {
       const ext = typeList[a].toLowerCase().replace(/[^a-z0-9]+/, '').substring(0, 4);
 
-      if (typeof fileTypes[typeList[a]] !== 'undefined') {
+      if (typeof mimeTypes[typeList[a]] !== 'undefined') {
         if (good.indexOf(ext) === -1) {
           good.push(ext);
-          output.push(fileTypes[typeList[a]])
+          output.push(mimeTypes[typeList[a]])
         }
       } else {
         if (bad.indexOf(typeList[a]) === -1) {
@@ -58,9 +58,9 @@ export const getAllowedTypes = (types: string) : mimeType[] => {
 };
 
 export const getFileExt = (file: File) : string => {
-  for (const prop in fileTypes) {
-    if (file.type === fileTypes[prop].mime) {
-      return fileTypes[prop].ext;
+  for (const prop in mimeTypes) {
+    if (file.type === mimeTypes[prop].mime) {
+      return mimeTypes[prop].ext;
     }
   }
 
@@ -172,7 +172,7 @@ export const imgIsPortrait = (newImg: File) : Promise<boolean> => {
  *
  * @returns FALSE if file can be uploaded. TRUE otherwise
  */
-export const isBadType = (type : string, allowedTypes : mimeType[]) : boolean => {
+export const isBadType = (type : string, allowedTypes : TMimeType[]) : boolean => {
   for (let a = 0; a < allowedTypes.length; a += 1) {
     if (allowedTypes[a].mime === type) {
       return false;
@@ -191,7 +191,7 @@ export const isBadType = (type : string, allowedTypes : mimeType[]) : boolean =>
  *
  * @returns Index of the file matched by name
  */
-export const moveFile = (uploadFiles : fileData[], fileName : string, next: number) : fileData[] => {
+export const moveFile = (uploadFiles :TFileData[], fileName : string, next: number) :TFileData[] => {
   for (let a = 0; a < uploadFiles.length; a += 1) {
     if (uploadFiles[a].name === fileName) {
       const from = a;

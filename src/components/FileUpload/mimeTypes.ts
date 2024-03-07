@@ -1,5 +1,5 @@
 
-import { mimeList } from '../../types/FileUpload.d';
+import { TMimeTypeList } from '../../types/FileUpload.d';
 
 
 /**
@@ -10,9 +10,9 @@ import { mimeList } from '../../types/FileUpload.d';
  * * __key:__ the file extension string
  * * __value:__ the file MIME type - used when validating an selected file
  *
- * @var {object} fileTypes
+ * @var {object} TMimeTypeList
  */
-export const fileTypes : mimeList = {
+const mimeTypes : TMimeTypeList = {
   png: {
     ext: 'png',
     mime: 'image/png',
@@ -225,3 +225,4 @@ export const fileTypes : mimeList = {
     type: 'document',
   },
 }
+export default mimeTypes;

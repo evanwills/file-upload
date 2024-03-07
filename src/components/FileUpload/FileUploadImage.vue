@@ -80,7 +80,7 @@ import {
   // useSlots,
 } from 'vue';
 import { getFieldID } from './FileUpload.utils';
-import { fileUploadImgState } from '../../types/FileUpload.d';
+import { TFileUploadImgState } from '../../types/FileUpload.d';
 import FileUploadPlaceholder from './FileUploadPlaceholder.vue'
 import WebCamera from './WebCamera.vue';
 // import TmpComponent from './TmpComponent.vue';

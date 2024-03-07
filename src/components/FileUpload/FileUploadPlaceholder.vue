@@ -52,7 +52,7 @@
 <script lang="ts" setup>
 import { computed, onBeforeMount, ref } from 'vue';
 import type { Ref } from 'vue';
-// import { svgData } from '../../types/FileUpload.d';
+// import { TSvgData } from '../../types/FileUpload.d';
 
 // --------------------------------------------------
 // START: Properties/attributes

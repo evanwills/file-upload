@@ -5,13 +5,11 @@ import { ImageBlobReduce } from "../../types/ImageBlobReduce.d"
  * Object for holding metadata about a file plus a File object (if
  * the file is OK to upload)
  *
- * @type {fileData}
+ * @type {TFileData}
  */
-export type fileData = {
+export type TFileData = {
   /**
    * Whether or not the file type is allowed by the client
-   *
-   * @property {boolean} badType
    */
   badType: boolean,
   /**
@@ -113,7 +111,7 @@ export type fileData = {
   type: string,
 }
 
-export type fileUploadState = {
+export type TFileUploadState = {
   /**
    * List of accepted mime types of files user is allowed to upload
    *
@@ -129,9 +127,9 @@ export type fileUploadState = {
   /**
    * List of file MIME types user can upload
    *
-   * @property {mimeType[]} allowedTypes
+   * @property {TMimeType[]} allowedTypes
    */
-  allowedTypes: mimeType[],
+  allowedTypes: TMimeType[],
   /**
    * Number of invalid files user has selected
    * (they may be wrong type or too large)
@@ -301,7 +299,7 @@ export type fileUploadState = {
   uploadList: fileData[],
 }
 
-export type fileUploadImgState = {
+export type TFileUploadImgState = {
   isBad: boolean,
   wrapClass: string,
   alt: string,
@@ -315,11 +313,11 @@ export type fileUploadImgState = {
  *
  * @var {object}
  */
-export type mimeList = {
-  [index: string]: mimeType
+export type TMimeTypeList = {
+  [index: string]: TMimeType
 }
 
-export type mimeType = {
+export type TMimeType = {
   /**
    * File Extension
    *
@@ -346,13 +344,13 @@ export type mimeType = {
   type: string,
 }
 
-export type replaceData = {
+export type TReplaceData = {
   oldName: string,
   newFile: File
 }
 
 
-export type svgData = {
+export type TSvgData = {
   errorCount: number,
   error1a: string,
   error1b: string,
