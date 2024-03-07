@@ -58,8 +58,7 @@ export const getAllowedTypes = (types) => {
     }
 
     if (good.length === 0) {
-      console.log('mimeTypes:', mimeTypes);
-      console.log('types:', types);
+      // eslint-disable-next-line no-console
       console.error(
         'Bad file mime types specified in <file-upload> component: '
         + `"${bad.join('", "')}"`,
@@ -140,6 +139,7 @@ export const humanFileSizeToBytes = (humanSize) => {
     + `"${humanSize}" to Bytes`;
 
   if (bits === null) {
+    // eslint-disable-next-line no-console
     console.error(errorMsg);
     return output;
   }
@@ -155,6 +155,7 @@ export const humanFileSizeToBytes = (humanSize) => {
     return Math.round(num * (1024 ** i));
   }
 
+  // eslint-disable-next-line no-console
   console.error(errorMsg);
   return (2 * (1024 ** 2));
 };

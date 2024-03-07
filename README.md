@@ -14,26 +14,26 @@
 
 ## Introduction
 
-`FileUpload` is a [Vue.js](https://v3.vuejs.org/) component that 
-provides a fancy user interface for uploading one or more files of 
-specified types and (for images) having the images resized in the 
+`FileUpload` is a [Vue.js](https://v3.vuejs.org/) component that
+provides a fancy user interface for uploading one or more files of
+specified types and (for images) having the images resized in the
 browser before they're sent to the server.
 
-> __Note:__ `FileUpload` does not handle anything to do with sending 
+> __Note:__ `FileUpload` does not handle anything to do with sending
 >           the files to the server.
 >
-> When the user confirms they are happy with their selection, a 
+> When the user confirms they are happy with their selection, a
 > [FileList](https://developer.mozilla.org/en-US/docs/Web/API/FileList)
 > object containing all the valid selected files is created  and made
-> available and a `confirmupload` event is emitted. It is then up to 
+> available and a `confirmupload` event is emitted. It is then up to
 > the parent component to handle sending the files to the server.
 
 ----
 
 ## User interface
 
-1. The user clicks on the Upload button. 
-2. A modal pops up over the page with some basic info what they 
+1. The user clicks on the Upload button.
+2. A modal pops up over the page with some basic info what they
    should upload and with with a "Choose files" button.
 3. User chooses one or more files.
 4. A carousel is displayed showing the selected files.
@@ -42,33 +42,33 @@ browser before they're sent to the server.
      with some animation to indicate something is happening.
    * Once the image has been resized, it will be displayed.
    * For valid non-image files a placeholder will be shown
-   * For files/images that are too large or a forbidden type 
+   * For files/images that are too large or a forbidden type
      (or both) a placeholder will be shown indicating that there is
      a  problem and what the poblem is.
-5. The carousel can be moved left and right so a different file/image 
+5. The carousel can be moved left and right so a different file/image
    is in focus.
-6. When an image/file has focus in the carousel, extra controls are 
+6. When an image/file has focus in the carousel, extra controls are
    shown for that image/file:
-   * *(If enabled)* The image/file can be moved left or right relative 
+   * *(If enabled)* The image/file can be moved left or right relative
      to its neighbour.
-   * The image/file can be replaced with a different image/file from 
+   * The image/file can be replaced with a different image/file from
      the file system.
    * The image/file can be deleted. (removed from the upload list.)
-7. *(unless `auto-exclude` attribute is set)* The user will be required 
-   to remove any files that are over-sized, a forbidden file type or 
-   in excess of the maximum number of files allowed. Or if the 
+7. *(unless `auto-exclude` attribute is set)* The user will be required
+   to remove any files that are over-sized, a forbidden file type or
+   in excess of the maximum number of files allowed. Or if the
    maximum total upload size is exceeded.
-8. Once all bad files are removed the user can click the 
+8. Once all bad files are removed the user can click the
    __`Confirm and upload`__ button.
-9. * *(If `upload-confirm-text` attribute was set and not empty)* 
-      The user will then have a final prompt to confirm they are 
+9. * *(If `upload-confirm-text` attribute was set and not empty)*
+      The user will then have a final prompt to confirm they are
       happy with their selection.
-      1. The user can then either click __`Cancel`__ to go back to 
+      1. The user can then either click __`Cancel`__ to go back to
          the carousel interface<br />
          OR
-      2. Click __`Send files`__ to get `FileUpload` to tell the 
+      2. Click __`Send files`__ to get `FileUpload` to tell the
          client to do the upload work.
-   * *(If no confirmation is required)* `FileUpload` will tell the 
+   * *(If no confirmation is required)* `FileUpload` will tell the
       client to do the upload work.
 
 ---
@@ -81,11 +81,11 @@ browser before they're sent to the server.
 |------------|------------|--------------|---------------|
 | _required_ | _{string}_ | _no default_ |     `id`      |
 
-Prepended to the IDs of component's buttons and input fields to make 
-it easy to add accessibility features to those buttons and input 
-fields. It gives the user the ability to preview their selection and 
-(if multiple files are selected change their order in the list). 
-It also allows selected files to be removed and new files added 
+Prepended to the IDs of component's buttons and input fields to make
+it easy to add accessibility features to those buttons and input
+fields. It gives the user the ability to preview their selection and
+(if multiple files are selected change their order in the list).
+It also allows selected files to be removed and new files added
 before selection is confirmed.
 
 ### `label`
@@ -102,10 +102,10 @@ Used as title for the file upload modal block
 |------------|-------------|---------|---------------|
 | _optional_ | _{boolean}_ | `FALSE` | `autoExclude` |
 
-Whether or not to auto exclude bad files from the confirmed list of 
-files. By default, the user must conciously remove any bad files 
-before they can upload anything to the server. By setting 
-`auto-exclude` to `TRUE`, the component automatically strips any 
+Whether or not to auto exclude bad files from the confirmed list of
+files. By default, the user must conciously remove any bad files
+before they can upload anything to the server. By setting
+`auto-exclude` to `TRUE`, the component automatically strips any
 disallowed files from the list it sends to the server.
 
 ### `cancel-btn-txt`
@@ -114,8 +114,8 @@ disallowed files from the list it sends to the server.
 |------------|------------|--------------------|----------------|
 | _optional_ | _{string}_ | "`Discard upload`" | `cancelBtnTxt` |
 
-Text for the button shown to the user asking them to confirm they 
-really want to abandon the upload. 
+Text for the button shown to the user asking them to confirm they
+really want to abandon the upload.
 (Show after they have clicked the close dialogue button.)
 
 ### `cancel-confirm-text`
@@ -125,9 +125,9 @@ really want to abandon the upload.
 | _optional_ | _{string}_ | "" (empty) | `cancelConfirmText` |
 
 Text to show user when the need to confirm they really want to
-abandon the upload. 
+abandon the upload.
 
-Normally this would be a brief paragraph of text asking them to 
+Normally this would be a brief paragraph of text asking them to
 reconsider abandoning the upload.
 
 ### `confirm-btn-txt`
@@ -136,7 +136,7 @@ reconsider abandoning the upload.
 |------------|------------|----------------|-----------------|
 | _optional_ | _{string}_ | "`Send files`" | `confirmBtnTxt` |
 
-Text for the button shown to the user asking them to confirm they 
+Text for the button shown to the user asking them to confirm they
 want to upload their selected files.
 (Show after they have clicked the close dialogue button.)
 
@@ -155,26 +155,26 @@ should upload.
 |------------|------------|---------|---------------|
 | _optional_ | _{number}_ |   `1`   |  `maxFiles`   |
 
-Maximum number of valid files a user can upload at one time. 
+Maximum number of valid files a user can upload at one time.
 (Can be any positive integer.)
 
-If `max-files` is set to 0, `max-files` will be forced to 999 
+If `max-files` is set to 0, `max-files` will be forced to 999
 (effectively unlimited).
 
 > __Note:__ __`max-files` is overridden by `unlimited`.
 
-If you want to allow users to upload more than 999 files in one go, 
+If you want to allow users to upload more than 999 files in one go,
 do __*NOT*__ use `unlimited`.<br />
-Instead, you must specify using `max-files` e.g. 
+Instead, you must specify using `max-files` e.g.
 ```
 max-files="1234"
-``` 
-Which will allow the user to upload 1,234 files (instead of the 
+```
+Which will allow the user to upload 1,234 files (instead of the
 default maximum of 999).
 
 > __Note:__ *I think it's a really bad idea to allow a user to*
 >           *upload more than about 20 files at once but I can see*
->           *there are plenty of usecases where that might be* 
+>           *there are plenty of usecases where that might be*
 >           *appropriate.*
 
 ### `min-files`
@@ -229,7 +229,7 @@ Whether or not user can reorder files displayed in the file/image carousel
 |------------|------------|-------------------------------|---------------|
 | _optional_ | _{string}_ | "`png jpg webp pdf docx doc`" |    `types`    |
 
-List of file types (file extensions) the server will accept. 
+List of file types (file extensions) the server will accept.
 (List will be split on white space and/or punctuation)
 
 ### `unlimited`
@@ -252,7 +252,7 @@ files.
 |------------|------------|------------|-----------------|
 | _optional_ | _{string}_ | "`Upload`" | `uploadBtnText` |
 
-The text for the button the user first sees and uses to open the full 
+The text for the button the user first sees and uses to open the full
 upload dialogue/widget
 
 ### `upload-confirm-text`
@@ -263,8 +263,8 @@ upload dialogue/widget
 
 Text to show user to help them choose appropritate files to upload
 
-Normally this would be a paragraphs explaining thanking them for 
-uploading the files and explaining what will be done with the files 
+Normally this would be a paragraphs explaining thanking them for
+uploading the files and explaining what will be done with the files
 once received.
 
 ----
@@ -277,52 +277,52 @@ Effort has been made to make this component both keyboard navigation and screen 
 
 #### `a` - Add one or more files to be uploaded
 
-> __Note:__ you can only add files if there are no bad files and the file 
+> __Note:__ you can only add files if there are no bad files and the file
 >           count limit or total file size limit has not been reached.
 
 #### `s` - Send files to the server
 
 Send the selected (valid) files to the server
 
-> __Note:__ This just sends an event to notify the client code that 
->           files are ready to be sent. The client code is 
+> __Note:__ This just sends an event to notify the client code that
+>           files are ready to be sent. The client code is
 >           responsible for handling sending data to the server.
 
-#### `p` - *Previous image*: Move the crousel to the previous image 
+#### `p` - *Previous image*: Move the crousel to the previous image
 
 *`Left`* arrow key and *`Up`* arrow key do the same thing within the carousel.
 
 
-#### `n` - *Next image*: Move the crousel to the next image 
+#### `n` - *Next image*: Move the crousel to the next image
 
 *`Right`* arrow key and *`down`* arrow key do the same thing within the carousel.
 
-> From within the carousel, you can also use the following keybard keys 
+> From within the carousel, you can also use the following keybard keys
 > * *`Page Down`* - move up to 10 images to the right.
 > * *`Shift`* + *`Right` arrow* - move up to 10 images to the right.
 > * *`End`* - moves to the last image/file in the carousel
 
 #### `b` - *Move file left*
 
-Swap the image/file's position with it left neighbour. 
+Swap the image/file's position with it left neighbour.
 
 This is useful when the order of the files/images is important
 
 #### `f` - *Move file right*
 
-Swap the image/file's position with it right neighbour. 
+Swap the image/file's position with it right neighbour.
 
 This is useful when the order of the files/images is important.
 
 #### `r` - *Replace file*
 
-If the user decides that the selected file is not right this allows 
-them to replace the file with a different file of their choosing, 
+If the user decides that the selected file is not right this allows
+them to replace the file with a different file of their choosing,
 from their file system.
 
 #### `d` - *Delete file*
 
-If the user decides that the selected file is wanted this allows 
+If the user decides that the selected file is wanted this allows
 them remove it from the list of files to be uploaded.
 
 ### Keyboard shortcuts
@@ -358,7 +358,7 @@ The FileUpload component only emits two custom events.
 
 ### `confirmupload` - Confirm Upload
 
-User has confirmed that they are happy with their selection wants to 
+User has confirmed that they are happy with their selection wants to
 proceed with file upload to the server.
 
 ### `fileuploadclosed` - File Upload dialogue has closed
@@ -371,9 +371,17 @@ User wishes to abandon their upload without sending anything to the server.
 
 Other than Vue.JS, FileUpload only has one other depenency.
 
-FileUpload depends on [`image-blob-reduce`](https://github.com/nodeca/image-blob-reduce) to efficiently handle resizing images in the browser.
+FileUpload depends on [`image-blob-reduce`](https://github.com/nodeca/image-blob-reduce)
+to efficiently handle resizing images in the browser.
 
 > __Note:__ `image-blob-reduce` depends on [`pica`](https://github.com/nodeca/pica)
+
+> __Note also:__ Hopefully, in the not too distant future, I will
+>           switch to using [Photon](https://silvia-odwyer.github.io/photon/),
+>           as the primary method for resizing images, with
+>           [`image-blob-reduce`](https://github.com/nodeca/image-blob-reduce)
+>           as the fallback if [WASM](https://webassembly.org/) is
+>           not supported.
 
 ---
 
