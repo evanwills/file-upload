@@ -83,6 +83,7 @@
 /* eslint vuejs-accessibility/media-has-caption: off */
 import { computed, ref } from 'vue';
 import LoadingSpinner from '../LoadingSpinner.vue';
+import { doCloseModal, doShowModal } from '../../../utils/vue-utils';
 
 // --------------------------------------------------
 // START: Emitted events
