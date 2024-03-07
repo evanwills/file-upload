@@ -79,7 +79,7 @@
   </dialog>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 // We are using the video element without any audio so there's no
 // need for a captions track
 /* eslint vuejs-accessibility/media-has-caption: off */

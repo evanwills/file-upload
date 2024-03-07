@@ -1,3 +1,5 @@
+$bright-blue: #000094;
+
 /**
  * Copied from Bootstrap 5.x
  */
@@ -38,15 +40,26 @@
     transition: transform cubic-bezier(.43,-0.42,.57,.9) 0.4s, opacity ease-out 0.3s 0.1s;
     width: 30rem;
 
+    * {
+      box-sizing: border-box;
+    }
+
     button, label {
       border-radius: 0;
     }
 
     > header {
+      box-sizing: border-box;
       padding: 2rem 2rem 1rem 2rem;
+
+      h2 {
+        width: 100%;
+      }
     }
 
     > footer {
+      background-color: transparent;
+      box-sizing: border-box;
       display: flex;
       justify-content: space-between;
       padding: 0 1rem 1rem;
@@ -104,6 +117,25 @@
     }
     @media screen and (min-height: 70rem) and (min-width: 70rem) {
       --file-upload-item-width: 35rem;
+    }
+  }
+
+  &__btn {
+    background-color: $tsf-bright-blue;
+    border: none;
+    border-radius: 0.3rem;
+    color: $white;
+    padding: 0.875rem 1.25rem;
+    position: relative;
+    font-size: 1rem;
+    width: 1fr;
+
+    .material-icons {
+      font-size: 1.25rem;
+      left: 50%;
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
     }
   }
 
@@ -181,9 +213,13 @@
 
   &__label {
     background-color: #009;
+    border: none;
     border-radius: 0.75rem;
+    border-top-left-radius: 0.3rem;
+    border-bottom-right-radius: 0.3rem;
     color: #fff;
     display: block;
+    font-size: 1rem;
     margin: 0 auto;
     /* max-width: 80%; */
     padding: 0.5rem 1rem 0.75rem;
@@ -425,5 +461,29 @@
         flex-grow: 1;
       }
     }
+  }
+
+  &__open {
+    background: $bright-blue;
+    border: none;
+    border-radius: 0.3rem;
+    color: white;
+    cursor: pointer;
+    display: inline-block;
+    font-family: Poppins, Arial, Helvetica, sans-serif;
+    font-style: normal;
+    font-variant-caps: normal;
+    font-variant-ligatures: normal;
+    font-variant-numeric: normal;
+    font-variant-east-asian: normal;
+    font-stretch: normal;
+    font-size: 0.875rem;
+    min-width: auto;
+    opacity: 1;
+    padding: 0.75rem 1.5em;
+    text-align: center;
+    text-transform: capitalize;
+    white-space: nowrap;
+    width: auto;
   }
 }

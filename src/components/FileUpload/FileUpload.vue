@@ -21,12 +21,18 @@
 
     <article v-if="showConfirm === false && sending === false" :class="getDialogueClass">
       <header>
-        <h2 class="file-upload__head">{{ label }}</h2>
-        <p v-if="helpTxt !== ''" class="file-upload__help">{{ helpTxt }}</p>
+        <slot v-if="isEmpty" name="header-empty">
+          <h2 class="file-upload__head">{{ label }}</h2>
+          <p v-if="helpTxt !== ''" class="file-upload__help">{{ helpTxt }}</p>
+        </slot>
+        <slot v-else name="header-viewing">
+          <h2 class="file-upload__head">{{ label }}</h2>
+          <p v-if="helpTxt !== ''" class="file-upload__help">{{ helpTxt }}</p>
+        </slot>
       </header>
-      <main v-if="uploadList.length > 0" class="file-upload__carousel__wrap">
+      <main v-if="!isEmpty" class="file-upload__carousel__wrap">
         <button
-          v-if="(uploadList.length > 1)"
+          v-if="!isEmpty"
           ref="previousBtn"
           class="file-upload__carousel__btn file-upload__carousel__btn--previous"
           accesskey="p"
@@ -560,7 +566,7 @@ const continueBtn : Ref<HTMLButtonElement|null> = ref(null);
  *
  * @returns Inline CSS for styling carousel
  */
-const getCarouselStyle = computed(() : string => {
+const getCarouselStyle : ComputedRef<string> = computed(() : string => {
   return `--carousel-items: ${uploadList.value.length}; --carousel-pos: ${selectedKey.value};`;
 });
 
@@ -570,7 +576,7 @@ const getCarouselStyle = computed(() : string => {
  *
  * @returns Message if there are issues. Empty string otherwise.
  */
-const getBadListMsg = computed(() : string => {
+const getBadListMsg : ComputedRef<string> = computed(() : string => {
   const excess = goodCount.value - max.value;
 
   let output = '';
@@ -605,7 +611,7 @@ const getBadListMsg = computed(() : string => {
  *
  * @returns Button text for confirming upload is ready
  */
-const getConfirmUploadBtnTxt = computed(() : string => {
+const getConfirmUploadBtnTxt : ComputedRef<string> = computed(() : string => {
   return (props.uploadConfirmText === '')
     ? 'Confirm and upload'
     : 'Upload';
@@ -617,7 +623,7 @@ const getConfirmUploadBtnTxt = computed(() : string => {
  *
  * @returns dialogue/modal classes
  */
-const getDialogueClass = computed(() : string => {
+const getDialogueClass : ComputedRef<string> = computed(() : string => {
   const clsName: string = 'file-upload__dialogue';
   let output: string = clsName;
 
@@ -636,6 +642,8 @@ const getDialogueClass = computed(() : string => {
 
   return output;
 });
+
+const isEmpty : ComputedRef<boolean> = computed(() : boolean => uploadList.value.length > 0);
 
 //  END:  Computed properties
 // --------------------------------------------------
@@ -695,7 +703,7 @@ const addFileToList = (data: TFileData): void => {
  * FileUpload modal to close.
  *
  * By adding a half second delay, to setting selectingFiles to
- * FALSE, the file upload dialogue can close while the main
+ * FALSE, the file selection dialogue can close while the main
  * FileUpload modal stays open.
  *
  * @param event
