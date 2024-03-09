@@ -18,7 +18,8 @@
     v-on:close="handleCloseDialogue(false)"
     v-on:cancel="handleCloseDialogue(false)">
     <div class="camera-dialogue__wrap">
-      <LoadingSpinner v-show="streaming === false && captured === false" />
+      <LoadingSpinner v-show="showSpinner" />
+      <p v-if="errorMsg !== ''" v-html="errorMsg"></p>
       <div v-show="streaming === true" class="camera">
         <video
           class="camera-dialogue__video"
@@ -82,6 +83,7 @@
 /* eslint vuejs-accessibility/media-has-caption: off */
 import { computed, ref } from 'vue';
 import LoadingSpinner from '../LoadingSpinner.vue';
+import { doCloseModal, doShowModal } from '../../../utils/vue-utils';
 
 // --------------------------------------------------
 // START: Emitted events
@@ -138,11 +140,15 @@ const errorMsg = ref('');
 
 const btnClassName = computed(() => { // eslint-disable-line arrow-body-style
   const tmp = 'file-upload__';
+  const btn = `${tmp}btn ${tmp}btn--webcam`;
 
   return (props.btnClass.trim() !== '')
-    ? `${tmp}btn ${props.btnClass}`
-    : `${tmp}btn ${tmp}label`;
+    ? `${btn} ${props.btnClass}`
+    : `${btn} ${tmp}label`;
 });
+
+const showSpinner = computed(() => streaming.value === false
+  && captured.value === false && errorMsg.value === '');
 
 //  END:  Computed properties
 // --------------------------------------------------
@@ -222,7 +228,8 @@ const initCamera = () => {
           setImgSize();
         }
       }).catch((error) => {
-        console.log('error:', error);
+        console.log('error:', error); // eslint-disable-line no-console
+        // eslint-disable-next-line no-console
         console.error('Could not use camera:', error);
         errorMsg.value = `Could not use camera: <strong>${error.toString().replace(/^.*?: /, '')}</strong>`;
       });

@@ -28,10 +28,12 @@
     <!-- START: file selection/capture and display UI -->
     <article v-if="showConfirm === false" :class="getDialogueClass">
       <header>
-        <h2 class="file-upload__head">{{ label }}</h2>
-        <p v-if="helpTxt !== ''" class="file-upload__help">{{ helpTxt }}</p>
+        <slot name="header">
+          <h2 class="file-upload__head">{{ label }}</h2>
+          <p v-if="helpTxt !== ''" class="file-upload__help">{{ helpTxt }}</p>
+        </slot>
       </header>
-      <main v-if="uploadList.length > 0" class="file-upload__carousel__wrap">
+      <main v-if="!uploadEmpty" class="file-upload__carousel__wrap">
         <button
           v-if="(uploadList.length > 1)"
           ref="previousBtn"
@@ -189,7 +191,7 @@
             {{ cancelBtnTxt }}
           </button>
           <button
-            class="file-upload__btn file-upload__confirm-btn__cancel"
+            class="file-upload__btn file-upload__confirm-btn--cancel"
             type="button"
             v-on:click="handleUnconfirm">Cancel</button>
         </p>
@@ -266,8 +268,26 @@ const props = defineProps({
    * Text for the button shown to the user asking them to confirm
    * they want to upload their selected files.
    * (after they have clicked the confirm and upload dialogue button)
+   *
+   * @property {string} confirmBtnTxt
    */
   confirmBtnTxt: { type: String, required: false, default: 'Send files' },
+
+  /**
+   * Whether or not the user must confirm they are sure they want to
+   * cancel the file upload
+   *
+   * @property {boolean} confirmCancel
+   */
+  confirmCancel: { type: Boolean, required: false, default: false },
+
+  /**
+   * Whether or not the user must confirm that they have selected all
+   * the files they wish to upload and are ready to upload them.
+   *
+   * @property {boolean} confirmComplete
+   */
+  confirmComplete: { type: Boolean, required: false, default: false },
 
   /**
    * Text to show user to help them choose appropritate files to
@@ -545,6 +565,8 @@ const min = ref(1);
  */
 const nextUID = ref(0);
 
+const noResize = ref(false);
+
 const previousBtn = ref(null);
 
 /**
@@ -690,6 +712,19 @@ const getConfirmUploadBtnTxt = computed(() => { // eslint-disable-line arrow-bod
   return (props.uploadConfirmText !== '')
     ? 'Confirm and upload'
     : 'Upload';
+});
+
+const uploadEmpty = computed(() => (uploadList.value.length === 0));
+
+const getHeadClass = computed(() => {
+  const tmp = 'file-upload__head';
+  let output = tmp;
+
+  if (!uploadEmpty.value) {
+    output += ` ${tmp}--type`;
+  }
+
+  return output;
 });
 
 /**
@@ -1147,8 +1182,6 @@ const increment = () => {
  * @param {KeyboardEvent} event
  */
 const handleKeyUp = (event) => {
-  console.group('handleKeyUp()');
-  console.log('event.key:', event.key);
   if (active.value === true && webCamOpen.value === false) {
     // Only process keyboard events while active.
 
@@ -1214,7 +1247,6 @@ const handleKeyUp = (event) => {
       confirmText.value = '';
     }
   }
-  console.groupEnd();
 };
 
 /**
@@ -1247,8 +1279,10 @@ const isImage = (type) => {
  */
 const moveFileLeft = (fileName) => {
   uploadList.value = moveFile(uploadList.value, fileName, -1);
+
   decrement();
   checkForIssues(true);
+
   nextTick(() => {
     if (typeof continueBtn.value !== 'undefined' && continueBtn.value !== null) {
       continueBtn.value.focus();
@@ -1284,6 +1318,20 @@ const previous = () => {
   decrement();
 };
 
+const finaliseFileProcessing = (data, file, newKey, now, force = false) => {
+  data.file = file; // eslint-disable-line no-param-reassign
+  data.key = newKey; // eslint-disable-line no-param-reassign
+  data.ready = true; // eslint-disable-line no-param-reassign
+  data.updated = now; // eslint-disable-line no-param-reassign
+
+  addFileToList(data);
+  checkForIssues(true);
+
+  if (force === true) {
+    doForceUpdate();
+  }
+};
+
 /**
  * Process a single file selected by the user
  *
@@ -1307,44 +1355,71 @@ const processFileInner = async (data, file) => {
 
   if (data.badType === false) {
     if (isImage(data.type)) { // imageReducer
-      const _imgReduce = new imageReducer(); // eslint-disable-line new-cap
-      // const imgReduce = new imageBlobReduce();
+      if (noResize.value === false) {
+        const _imgReduce = new imageReducer(); // eslint-disable-line new-cap
+        // const imgReduce = new imageBlobReduce();
 
-      _imgReduce.toBlob(file, { max: 1500 })
-        .then(async (blob) => {
-          // Convert image blob to file object
-          const newFile = new File(
-            // Blob must be wrapped within array for file object
-            // constructor
-            [blob],
-            file.name,
-            {
-              type: blob.type,
-              lastModified: Date.now(),
-            },
-          );
+        _imgReduce.toBlob(file, { max: 1500 })
+          .then(async (blob) => {
+            // Convert image blob to file object
+            const newFile = new File(
+              // Blob must be wrapped within array for file object
+              // constructor
+              [blob],
+              file.name,
+              {
+                type: blob.type,
+                lastModified: Date.now(),
+              },
+            );
 
-          data.ext = getFileExt(newFile); // eslint-disable-line no-param-reassign
-          data.file = newFile; // eslint-disable-line no-param-reassign
-          data.isPortrait = true; // eslint-disable-line no-param-reassign
-          data.key = newKey; // eslint-disable-line no-param-reassign
-          data.ready = true; // eslint-disable-line no-param-reassign
-          data.size = newFile.size; // eslint-disable-line no-param-reassign
-          data.src = URL.createObjectURL(newFile); // eslint-disable-line no-param-reassign
-          data.tooBig = newFile.size > singleMax.value; // eslint-disable-line no-param-reassign
-          data.updated = now; // eslint-disable-line no-param-reassign
+            data.ext = getFileExt(newFile); // eslint-disable-line no-param-reassign
+            // data.file = newFile; // eslint-disable-line no-param-reassign
+            data.isPortrait = true; // eslint-disable-line no-param-reassign
+            // data.key = newKey; // eslint-disable-line no-param-reassign
+            // data.ready = true; // eslint-disable-line no-param-reassign
+            data.size = newFile.size; // eslint-disable-line no-param-reassign
+            data.src = URL.createObjectURL(newFile); // eslint-disable-line no-param-reassign
+            data.tooBig = newFile.size > singleMax.value; // eslint-disable-line no-param-reassign
+            // data.updated = now; // eslint-disable-line no-param-reassign
 
-          addFileToList(data);
-          checkForIssues(true);
-          doForceUpdate();
-        });
+            finaliseFileProcessing(data, newFile, newKey, now, true);
+            // addFileToList(data);
+            // checkForIssues(true);
+            // doForceUpdate();
+          })
+          .catch((error) => {
+            if (error.toString().includes('Pica: cannot use getImageData on canvas')) {
+              // Bummer!!
+              // Browser is blocking our ability to resize images
+              // using the canvas API
+
+              // Make sure we don't waste time trying to resize
+              // other images.
+              noResize.value = true;
+
+              // Get a data URL for the uploaded images.
+              data.src = URL.createObjectURL(file); // eslint-disable-line no-param-reassign
+
+              // Just put what we've got into the carousel and the
+              // upload list
+              finaliseFileProcessing(data, file, newKey, now, true);
+            }
+          });
+      } else {
+        // We already know that resizing is not possible.
+        // We'll just put what we've got into the carousel
+        finaliseFileProcessing(data, file, newKey, now, true);
+      }
     } else {
-      data.file = file; // eslint-disable-line no-param-reassign
-      data.key = newKey; // eslint-disable-line no-param-reassign
-      data.ready = true; // eslint-disable-line no-param-reassign
-      data.updated = now; // eslint-disable-line no-param-reassign
-      addFileToList(data);
-      checkForIssues(true);
+      // data.file = file; // eslint-disable-line no-param-reassign
+      // data.key = newKey; // eslint-disable-line no-param-reassign
+      // data.ready = true; // eslint-disable-line no-param-reassign
+      // data.updated = now; // eslint-disable-line no-param-reassign
+      // addFileToList(data);
+      // checkForIssues(true);
+
+      finaliseFileProcessing(data, file, newKey, now, false);
     }
   } else {
     checkForIssues(true);
@@ -1592,6 +1667,8 @@ onBeforeMount(() => {
         max.value = 999;
       } else {
         max.value = 1;
+
+        // eslint-disable-next-line no-console
         console.error(`${tmp} invalid maxFiles set`);
       }
     }
@@ -1599,13 +1676,17 @@ onBeforeMount(() => {
 
   if (min.value < 0) {
     min.value = 0;
+
+    // eslint-disable-next-line no-console
     console.error(`${tmp} invalid minFiles set`);
   } else if (min.value > max.value) {
+    // eslint-disable-next-line no-console
     console.error(`${tmp} invalid minFiles set (minFiles cannot be greater than maxFiles)`);
     min.value = max.value;
   }
 
   if (max.value > 100 && max.value !== 999) {
+    // eslint-disable-next-line no-console
     console.warn(`${tmp} unwise value for maxFiles set`);
   }
 
@@ -1632,478 +1713,4 @@ onBeforeMount(() => {
 // --------------------------------------------------
 </script>
 
-<style lang="scss">
-$bright-blue: #000094;
-
-.file-upload {
-  &__dialogue {
-    --file-upload-item-width: 14rem;
-    --file-upload-img-max: calc(var(--file-upload-item-width) - 4em);
-    align-content: stretch;
-    background-color: #fff;
-    border-radius: 0.25rem;
-    box-shadow: 0.25rem 0.25rem 1rem rgba(255, 255, 150, 0.8);
-    box-sizing: border-box;
-    color: #000;
-    display: flex;
-    flex-direction: column;
-    max-width: calc(100% - 4rem);
-    max-height: calc(100% - 4rem);
-    left: 50%;
-    opacity: 0;
-    padding: 0;
-    position: fixed;
-    text-align: left;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    transition: transform cubic-bezier(.43,-0.42,.57,.9) 0.4s, opacity ease-out 0.3s 0.1s;
-    width: 30rem;
-
-    * {
-      box-sizing: border-box;
-    }
-
-    button, label {
-      border-radius: 0;
-    }
-
-    > header {
-      box-sizing: border-box;
-      padding: 2rem 2rem 1rem 2rem;
-
-      h2 {
-        width: 100%;
-      }
-    }
-
-    > footer {
-      background-color: transparent;
-      box-sizing: border-box;
-      display: flex;
-      justify-content: space-between;
-      padding: 0 1rem 1rem;
-
-      @media screen and (min-width: 30rem) {
-        padding: 0 2rem 2rem 2rem;
-      }
-    }
-
-    &--active {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-      transition: transform cubic-bezier(.49,.2,.58,1.43) 0.4s 0.3s, opacity ease-in 0.3s 0.2s;
-    }
-
-    &--some {
-      max-height: calc(100% - 4rem);
-      /* overflow: hidden; */
-      width: calc(100% - 4rem);
-    }
-
-    @media screen and (min-height: 26rem) and (min-width: 26rem) {
-      --file-upload-item-width: 12rem;
-    }
-    @media screen and (min-height: 30rem) and (min-width: 30rem) {
-      --file-upload-item-width: 12rem;
-      max-width: calc(100% - 8rem);
-    }
-    @media screen and (min-height: 34rem) and (min-width: 34rem) {
-      --file-upload-item-width: 16rem;
-    }
-    @media screen and (min-height: 38rem) and (min-width: 38rem) {
-      --file-upload-item-width: 19rem;
-    }
-    @media screen and (min-height: 42rem) and (min-width: 42rem) {
-      --file-upload-item-width: 21rem;
-    }
-    @media screen and (min-height: 46rem) and (min-width: 44rem) {
-      --file-upload-item-width: 23rem;
-    }
-    @media screen and (min-height: 50rem) and (min-width: 50rem) {
-      --file-upload-item-width: 25rem;
-    }
-    @media screen and (min-height: 54rem) and (min-width: 54rem) {
-      --file-upload-item-width: 27rem;
-    }
-    @media screen and (min-height: 58rem) and (min-width: 58rem) {
-      --file-upload-item-width: 29rem;
-    }
-    @media screen and (min-height: 62rem) and (min-width: 62rem) {
-      --file-upload-item-width: 31rem;
-    }
-    @media screen and (min-height: 66rem) and (min-width: 66rem) {
-      --file-upload-item-width: 33rem;
-    }
-    @media screen and (min-height: 70rem) and (min-width: 70rem) {
-      --file-upload-item-width: 35rem;
-    }
-  }
-
-  &__btn {
-    background-color: $bright-blue;
-    border: none;
-    border-radius: 0.3rem;
-    color: white;
-    padding: 0.875rem 1.25rem;
-    position: relative;
-    font-size: 1rem;
-    width: 1fr;
-
-    .material-icons {
-      font-size: 1.25rem;
-      left: 50%;
-      position: absolute;
-      top: 50%;
-      transform: translate(-50%, -50%);
-    }
-  }
-
-  &__bg-close {
-    background-color: rgba(0, 0, 0, 0.75);
-    border: none;
-    display: inline-block;
-    height: 100%;
-    left: 50%;
-    opacity: 0;
-    position: fixed;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    transition: transform ease-in-out 0.3s 0.3s, opacity ease-in-out 0.3s 0.3s;
-    width: 100%;
-
-    &--active {
-      opacity: 8;
-      transform: translate(-50%, -50%) scale(1);
-      transition: transform ease-in-out 0.3s, opacity ease-in-out 0.3s;
-    }
-
-    &:disabled {
-      cursor: auto;
-    }
-  }
-
-  &__main-close {
-    background-color: #fff;
-    border: 0.1rem solid #009;
-    border-radius: 50% !important;
-    color: #000;
-    display: inline-block;
-    font-size: 0.5rem;
-    height: 2rem;
-    line-height: 1rem;
-    position: absolute;
-    right: -0.75rem;
-    top: -0.75rem;
-    width: 2rem;
-
-    &::after {
-      content: 'X';
-      font-family: Verdana, Geneva, Tahoma, sans-serif;
-      font-size: 1rem;
-      font-weight: bold;
-      left: 50%;
-      line-height: 0.7rem;
-      position: absolute;
-      top: 50%;
-      transform: translate(-50%, -50%);
-    }
-  }
-
-  &__head {
-    line-height: 1.75rem;
-    margin: 0 0 0.5rem;
-    text-align: center;
-
-    @media screen and (min-width: 30rem) {
-      line-height: 2rem;
-      margin: 0 0 1rem;
-    }
-  }
-
-  &__help {
-    line-height: 1.25rem;
-    margin: 0.5rem 0;
-
-    @media screen and (min-width: 30rem) {
-      line-height: 1.5rem;
-      margin: 1rem 0;
-    }
-  }
-
-  &__label {
-    background-color: #009;
-    border: none;
-    border-radius: 0.75rem;
-    border-top-left-radius: 0.3rem;
-    border-bottom-right-radius: 0.3rem;
-    color: #fff;
-    display: block;
-    font-size: 1rem;
-    margin: 0 auto;
-    /* max-width: 80%; */
-    padding: 0.5rem 1rem 0.75rem;
-    text-align: center;
-  }
-
-  &__first-label {
-    display: flex;
-    justify-content: space-between;
-    margin: 1rem 0 0;
-    width: 100%;
-    column-gap: 2rem;
-
-    > * {
-      width: calc(50% - 1rem);
-    }
-  }
-
-  &__input {
-    display: block;
-  }
-
-  &__add-confirm {
-    align-items: stretch;
-    column-gap: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    margin: 1rem 0 0;
-    row-gap: 0.5rem;
-    width: 100%;
-
-    @media screen and (min-width: 30rem) {
-      flex-direction: row;
-      column-gap: 2rem;
-    }
-
-    @media screen and (min-width: 40rem) {
-      justify-content: flex-end;
-    }
-  }
-
-  &__add-btn {
-    background-color: #000;
-    border-radius: 0.5rem;
-    color: #fff;
-    padding: 0.4em 1.2em;
-    text-align: center;
-
-    &:focus-within {
-      outline: 0.2rem solid #00b;
-      /* outline-offset: 0.1rem; */
-    }
-
-    @media screen and (min-width: 30rem) {
-      margin-left: 0.5rem;
-      padding: 0.6em 1.2em;
-    }
-  }
-
-  &__carousel {
-    align-content: stretch;
-    align-items: stretch;
-    box-sizing: border-box;
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: stretch;
-    height: 100%;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    transform: translateX(calc(-1 * calc(var(--file-upload-item-width) * var(--carousel-pos))));
-    /* transition: transform ease-in-out 0.3s; */
-    transition: transform cubic-bezier(.29,-0.06,.74,1.09) 0.3s;
-    white-space: nowrap;
-    width: calc(var(--file-upload-item-width) * var(--carousel-items));
-
-    &__wrap {
-      align-items: stretch;
-      flex-grow: 1;
-      max-height: calc(100% - 4rem);
-      overflow: hidden auto;
-      position: relative;
-
-      &::before, &::after {
-        background: linear-gradient(
-          90deg,
-          rgba(255,255,255,1) 0%,
-          rgba(255,255,255,0) 100%
-        );
-        bottom: 0;
-        content: '';
-        display: block;
-        position: absolute;
-        top: 0;
-        width: 3rem;
-        z-index: 10000;
-
-        @media screen and (min-width: 30rem) {
-          width: 8rem;
-        }
-      }
-
-      &::before {
-        left: 0;
-      }
-
-      &::after {
-        right: 0;
-        transform: rotate(180deg);
-      }
-    }
-
-    &__outer {
-      position: relative;
-      height: 100%;
-      left: calc(50% - calc(var(--file-upload-item-width) / 2));
-
-      @media screen and (min-width: 30rem) {
-        height: 100%;
-      }
-    }
-
-    &__item {
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      flex-grow: 1;
-      padding: 0 1rem;
-      margin: 0;
-      width: var(--file-upload-item-width);
-    }
-
-    &__btn {
-      background-color: transparent;
-      bottom: 0;
-      display: block;
-      font-size: 0.5rem;
-      height: 1.75rem;
-      height: 100%;
-      outline: none;
-      position: absolute;
-      top: 0;
-      width: calc(calc(100% - var(--file-upload-item-width)) / 2);
-      z-index: 20000;
-
-      &::before {
-        border: none;
-        border-radius: 10rem;
-        display: block;
-        content: '';
-        height: 2rem;
-        outline-color: transparent;
-        /* outline-color: #00b; */
-        outline-style: dotted;
-        outline-width: 0.2rem;
-        position: absolute;
-        top: 50%;
-        transform-origin: 50% 50%;
-        transition: outline-color ease-in-out 0.1s;
-        width: 2rem;
-      }
-
-      &:hover, &:focus {
-        border: none;
-        outline: none;
-
-        &::before {
-          outline-color: #00b;
-        }
-      }
-
-      &::after {
-        border: 0.3rem solid #0069d5;
-        border-left: none;
-        border-top: none;
-        display: block;
-        content: '';
-        transform-origin: 50% 50%;
-        top: 50%;
-        width: 1rem;
-        height: 1rem;
-        position: absolute;
-      }
-
-      &--next {
-        right: 0;
-
-        &::before {
-          right: 0.5rem;
-          transform: translateY(-50%);
-        }
-
-        &::after {
-          right: 1rem;
-          transform: translateY(-50%) rotate(-45deg);
-        }
-      }
-
-      &--previous {
-        left: 0;
-
-        &::before {
-          left: 0.5rem;
-          transform: translateY(-50%);
-        }
-
-        &::after {
-          left: 1rem;
-          transform: translateY(-50%) rotate(135deg);
-        }
-      }
-    }
-  }
-
-  &__bad-list-msg {
-    background-color: #c00;
-    border-radius: 0.25rem;
-    color: #fff;
-    flex-grow: 1;
-    font-weight: bold;
-    padding: 1.25rem 1.5rem 1.5rem;
-    text-align: center;
-  }
-
-  &__confirm {
-    &-txt {
-      margin: 0 2rem 0.5rem;
-    }
-
-    &-btns {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      column-gap: 2rem;
-      margin: 1rem 0 0;
-
-      > button {
-        flex-grow: 1;
-      }
-    }
-  }
-
-  &__open {
-    background: $bright-blue;
-    border: none;
-    border-radius: 0.3rem;
-    color: white;
-    cursor: pointer;
-    display: inline-block;
-    font-family: Poppins, Arial, Helvetica, sans-serif;
-    font-style: normal;
-    font-variant-caps: normal;
-    font-variant-ligatures: normal;
-    font-variant-numeric: normal;
-    font-variant-east-asian: normal;
-    font-stretch: normal;
-    font-size: 0.875rem;
-    min-width: auto;
-    opacity: 1;
-    padding: 0.75rem 1.5em;
-    text-align: center;
-    text-transform: capitalize;
-    white-space: nowrap;
-    width: auto;
-  }
-}
-</style>
+<style lang="scss" src="./FileUpload.scss"></style>
