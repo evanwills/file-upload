@@ -42,7 +42,15 @@
           <span class="visually-hidden">Previous</span>
         </button>
         <div class="file-upload__carousel__outer">
-          <ul class="file-upload__carousel" :style="getCarouselStyle">
+          <ul
+            class="file-upload__carousel"
+            :style="getCarouselStyle"
+            v-on:pointerdown="handlePointerDown"
+            v-on:pointermove="handlePointerMove"
+            v-on:pointerup="handlePointerUp"
+            v-on:touchstart="handleTouchStart"
+            v-on:touchmove="handleTouchMove"
+            v-on:touchend="handleTouchEnd">
             <li
               v-for="(file, index) in uploadList"
               class="file-upload__carousel__item"
@@ -212,7 +220,7 @@ import {
   humanImplode,
   humanFileSizeToBytes,
 } from './FileUpload.utils';
-import { getEpre } from '../../../utils/general-utils';
+import { getEpre } from '../../utils/general-utils';
 import FileUploadImage from './FileUploadImage.vue';
 import WebCamera from './WebCamera.vue';
 
@@ -581,6 +589,10 @@ const tooBig = ref(false);
  * file can be
  */
 const totalMax = ref(15728640);
+
+const touching = ref(false);
+const touchX = ref(null);
+const touchY = ref(null);
 
 /**
  * Generated help text to guide users in how many and which types
@@ -1487,6 +1499,51 @@ const replaceFile = ({ oldName, newFile }) => {
   }
 };
 
+const handlePointerDown = (event) => {
+  // console.group('handlePointerDown()');
+  // console.log('event:', event)
+  // console.groupEnd();
+};
+
+const handlePointerMove = (event) => {
+  // console.group('handlePointerMove()');
+  // console.log('event:', event)
+  // console.groupEnd();
+};
+
+const handlePointerUp = (event) => {
+  // console.group('handlePointerUp()');
+  // console.log('event:', event)
+  // console.groupEnd();
+};
+const handleTouchStart = (event) => {
+  if (event.touches.length === 1) {
+    touching.value = true;
+    console.group('handleTouchStart()');
+    console.log('event:', event)
+    console.groupEnd();
+  }
+};
+
+const handleTouchMove = (event) => {
+  console.group('handleTouchMove()');
+  console.log('event:', event)
+  console.groupEnd();
+};
+
+const handleTouchEnd = (event) => {
+  console.group('handleTouchEnd()');
+  console.log('event:', event)
+  console.groupEnd();
+  touching.value = false;
+};
+
+const handleTouchCancel = (event) => {
+  console.group('handleTouchCancel()');
+  console.log('event:', event)
+  console.groupEnd();
+};
+
 //  END:  Local methods
 // --------------------------------------------------
 // START: Lifecycle methods
@@ -1520,6 +1577,7 @@ onBeforeMount(() => {
 
   // --------------------------------------------------------------
   // START: Prepare file input label text
+
   min.value = parseInt(props.minFiles, 10);
   if (props.unlimited === true) {
     max.value = 999;
@@ -1682,10 +1740,10 @@ $bright-blue: #000094;
   }
 
   &__btn {
-    background-color: $tsf-bright-blue;
+    background-color: $bright-blue;
     border: none;
     border-radius: 0.3rem;
-    color: $white;
+    color: white;
     padding: 0.875rem 1.25rem;
     position: relative;
     font-size: 1rem;
