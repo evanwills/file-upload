@@ -1,7 +1,10 @@
+@import '../../assets/scss/config';
 
 .file-upload-img {
   align-items: center;
   box-sizing: border-box;
+  container-name: file-upload-img;
+  container-type: size;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -72,20 +75,21 @@
       outline: 0.2rem dotted #00b;
     }
 
-    &::before {
-      position: absolute;
-      font-size: 1.5rem;
-      line-height: 0.9rem;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -55%);
-    }
+    // &::before {
+    //   position: absolute;
+    //   font-size: 1.5rem;
+    //   line-height: 0.9rem;
+    //   top: 50%;
+    //   left: 50%;
+    //   transform: translate(-50%, -55%);
+    // }
 
     &-block {
       bottom: 0;
       box-sizing: border-box;
       column-gap: 0.3rem;
       display: flex;
+      flex-direction: column;
       flex-wrap: wrap;
       justify-content: space-between;
       opacity: 0;
@@ -106,16 +110,20 @@
         // order: 2;
         padding: 0.5rem 0 0;
       }
+
+      @container file-upload-img (min-width: 15rem) {
+        flex-direction: row;
+      }
     }
 
     &--delete {
-      background-color: #c00;
+      background-color: #c00 !important;
       color: #fff;
 
-      &::before {
-        content: '\00425';
-        transform: translate(-50%, -55%) scaleX(125%);
-      }
+      // &::before {
+      //   content: '\00425';
+      //   transform: translate(-50%, -55%) scaleX(125%);
+      // }
     }
 
     &--replace {
@@ -135,34 +143,43 @@
         // outline-offset: 0.1rem;
       }
 
-      &::before {
-        content: '\021BB';
-        font-size: 2rem;
-        line-height: 0.9rem;
-        transform: translate(-50%, -75%);
+      .material-icons {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
       }
+
+      // &::before {
+      //   content: '\021BB';
+      //   font-size: 2rem;
+      //   line-height: 0.9rem;
+      //   transform: translate(-50%, -75%);
+      // }
     }
 
     &--left {
       order: -2;
 
-      &::before {
-        content: '\021D0';
-      }
+      // &::before {
+      //   content: '\021D0';
+      // }
     }
 
     &--right {
       order: 1;
 
-      &::before {
-        content: '\021D2';
-      }
+      // &::before {
+      //   content: '\021D2';
+      // }
     }
 
     &--move {
-      &::before {
-        transform: translate(-50%, -65%) scale(125%);
-      }
+      background-color: $navy-blue !important;
+
+      // &::before {
+      //   transform: translate(-50%, -65%) scale(125%);
+      // }
     }
   }
 

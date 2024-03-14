@@ -100,9 +100,9 @@
 <script setup>
 import {
   computed,
-  onBeforeMount,
+  // onBeforeMount,
   // onMounted,
-  onUpdated,
+  // onUpdated,
   ref,
 } from 'vue';
 import { getFieldID } from './FileUpload.utils';
@@ -427,37 +427,11 @@ const getID = (suffix) => getFieldID(props.id, suffix);
 // --------------------------------------------------
 // START: Lifecycle methods
 
-onBeforeMount(() => {
-  // const tmp = 'file-upload-img';
+// onBeforeMount(() => {
+// });
 
-  // if (props.isTooBig === true || props.isBadType === true) {
-  //   isBad.value = true;
-
-  //   wrapClass.value = `${tmp} ${tmp}--bad`;
-  // } else if (props.isSurplus === true) {
-  //   wrapClass.value = `${tmp} ${tmp}--surplus`;
-  // } else {
-  //   wrapClass.value = tmp;
-  // }
-
-  // _ext.value = (props.isReady === false)
-  //   ? `Processing ${props.ext} image`
-  //   : props.ext;
-
-  // _fileName.value = props.fileName.replace(/([^a-z0-9]+)/ig, '$1&ZeroWidthSpace;')
-
-  console.group('FileUploadImage.onBeforeMount()');
-  console.log('props.fileName:', props.fileName);
-  console.log('props.updatedKey:', props.updatedKey);
-  console.groupEnd();
-});
-
-onUpdated(() => {
-  console.group('FileUploadImage.onUpdated()');
-  console.log('props.fileName:', props.fileName);
-  console.log('props.updatedKey:', props.updatedKey);
-  console.groupEnd();
-});
+// onUpdated(() => {
+// });
 
 //  END:  Lifecycle methods
 // --------------------------------------------------

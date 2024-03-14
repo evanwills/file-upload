@@ -29,8 +29,11 @@
         <p class="camera-dialogue__btn-wrap">
           <button
             class="file-upload__btn"
+            id="startbutton"
             type="button"
-            v-on:click="handleTakePhoto()">Capture</button>
+            v-on:click="handleTakePhoto()">
+            Capture
+          </button>
         </p>
       </div>
       <div v-show="captured === true" class="output">
@@ -49,6 +52,7 @@
         <p class="camera-dialogue__btn-wrap">
           <button
             class="file-upload__btn"
+            id="retakebutton"
             type="button"
             v-on:click="handleRetakePhoto()">
             <!-- <span class="material-icons">autorenew</span> -->
@@ -58,6 +62,7 @@
           </button>
           <button
             class="file-upload__btn"
+            id="usebutton"
             type="button"
             v-on:click="handleUsePhoto()">
             Use
@@ -83,7 +88,7 @@
 /* eslint vuejs-accessibility/media-has-caption: off */
 import { computed, ref } from 'vue';
 import LoadingSpinner from '../LoadingSpinner.vue';
-import { doCloseModal, doShowModal } from '../../../utils/vue-utils';
+import { doCloseModal, doShowModal } from '../../utils/vue-utils';
 
 // --------------------------------------------------
 // START: Emitted events
@@ -103,7 +108,6 @@ const props = defineProps({
   btnTxt: { type: String, required: false, default: 'Take a photo' },
   btnTxtHidden: { type: String, required: false, default: '' },
   btnIcon: { type: String, required: false, default: '' },
-  fileNamePrefix: { type: String, required: false, default: '' },
 });
 
 //  END:  Properties/attributes
@@ -138,7 +142,8 @@ const errorMsg = ref('');
 // --------------------------------------------------
 // START: Computed properties
 
-const btnClassName = computed(() => { // eslint-disable-line arrow-body-style
+// eslint-disable-next-line arrow-body-style
+const btnClassName = computed(() => {
   const tmp = 'file-upload__';
   const btn = `${tmp}btn ${tmp}btn--webcam`;
 
@@ -202,9 +207,9 @@ const dialogueCloseInner = () => {
   errorMsg.value = '';
 
   if (videoEl.value !== null && videoEl.value.srcObject !== null) {
-    videoEl.value.srcObject.getTracks().forEach((track) => {
-      track.stop();
-    });
+    videoEl.value.srcObject.getTracks().forEach(
+      (track) => { track.stop(); },
+    );
   }
 
   if (typeof window.screen !== 'undefined' && typeof window.screen.orientation !== 'undefined') {
@@ -251,7 +256,7 @@ const handleCanPlay = () => {
 const handleCloseDialogue = (close) => {
   dialogueCloseInner();
   if (close === true && cameraui.value !== null) {
-    cameraui.value.close();
+    doCloseModal(cameraui.value);
     emit('capturing', false);
   }
 };
@@ -274,7 +279,7 @@ const handleOpenCamera = () => {
 
   if (cameraui.value !== null) {
     initCamera();
-    cameraui.value.showModal();
+    doShowModal(cameraui.value);
   }
 };
 
@@ -324,7 +329,7 @@ const handleUsePhoto = () => {
     fileName += `${Date.now()}.png`;
 
     if (cameraui.value !== null) {
-      cameraui.value.close();
+      doCloseModal(cameraui.value);
     }
 
     emit(
